@@ -1,13 +1,18 @@
 # gptbuster
 Webdir fuzzer based on ChatGPT
 
-# usage
+# USAGE
 
-'git clone https://github.com/wearetyomsmnv/gptbuster'
-'cd gptbuster'
-'pip3 install -r requirements'
 
-'python3 main.py <website> <api-key>'
+git clone https://github.com/wearetyomsmnv/gptbuster
+
+cd gptbuster
+
+pip3 install -r requirements
+
+python3 main.py <website> <api-key>
+
+
 
 ex: python3 main.py https://google.com/ sk***********
 
@@ -18,4 +23,6 @@ Bitrix
 Wordpress
 Joomla
 Drupal
+
+Наслаждайся. В скором времени будут добавлены крутые фичи! :joy:
 
