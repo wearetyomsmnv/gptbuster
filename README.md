@@ -5,7 +5,9 @@ Webdir fuzzer based on ChatGPT
 
 
 git clone https://github.com/wearetyomsmnv/gptbuster
+
 cd gptbuster
+
 pip3 install -r requirements
 
 python3 main.py <website> <api-key>
