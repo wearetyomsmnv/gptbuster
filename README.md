@@ -21,7 +21,7 @@ ex: python3 main.py https://google.com/ sk*********** --other
 
 docker build -t gptbuster . 
 
-ex: docker run -it <container name> <args> 
+ex: sudo docker run -it <image_name> bash -c "python3 main.py <site> <api_key> --backup"
 
 
 
