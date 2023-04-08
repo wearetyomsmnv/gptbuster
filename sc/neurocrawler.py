@@ -16,24 +16,22 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
+def gpt_crawl():
 
-def gpt(api_key):
-
-
-    print(Bcolors.OKGREEN + "[+]: " + "CRAWLING")
-
-    openai.api_key = api_key
-
-    param = input(str("Введите параметр для генерации словаря или используйте 'default': "))
-    if param == "default":
-        parametr = "Сгенерируй пожалуйста большой список для кравлинга директорий на веб-сайте. Выведи его без своих пояснений. Всегда выводи только директории, без '/' в самом начале."
+    print(
+        Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+    print(
+        Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+    parametr = input(str("param: "))
+    if parametr == "default":
+        paramet = f"Сгенерируй пожалуйста большой список директорий для кравлинга веб-сайта, которые ты знаешь."
     else:
-        parametr = param
-
+        paramet = parametr
+    desc = "Этот словарь будет использоваться для кравлинга директорий на сайте"
     response = openai.Completion.create(
         engine="text-davinci-002",
         prompt=(
-            f"{parametr}"
+            f"{desc}{paramet}.Просто выведи список директорий для кравлинга без своих пояснений.\n"
         ),
     )
 
@@ -49,9 +47,10 @@ def gpt(api_key):
 
 
 def web_crawler(link, api_key):
+    openai.api_key = api_key
     visited_urls = set()
     queue = [link]
-    directories_dict = gpt(api_key)
+    directories_dict = gpt_crawl()
 
     while queue:
         current_url = queue.pop(0)

@@ -81,6 +81,7 @@ detected_cms = ""
 detected_api = ""
 txtman = ""
 
+
 def check_files(dictionary_dir, link):
     directories = []
     print(Bcolors.OKCYAN + "[+]: "+"ИДЁТ ПРОВЕРКА")
@@ -259,17 +260,21 @@ def insecure(detected_cms):
     reg = True
     def gpt_insecure(cms):
 
+        desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
         print(Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
+        print(
+            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+
         parametr = input(str("param: "))
         if parametr == "default":
-            paramet = f"Сгенерируй пожалуйста большой список небезопасных директорий и небезопасных файлов для {cms}, которые ты знаешь.Просто выведи список директорий без своих пояснений.\n"
+            paramet = f"Сгенерируй пожалуйста большой список небезопасных директорий и параметров для {cms}, которые ты знаешь.Просто выведи список директорий без своих пояснений.\n"
         else:
             paramet = parametr
 
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
+                f"{desc}{paramet}.Просто выведи список директорий без своих пояснений.\n"
             ),
             temperature=0.5,
             max_tokens=2048,
@@ -321,16 +326,19 @@ def backups(detected_cms):
 
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+        print(
+            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
             paramet = f"Сгенерируй пожалуйста большой список файлов, которые могут являться бэкапами для {cms}, которые ты знаешь.\n"
         else:
             paramet = parametr
 
+        desc = "Этот список будет использоваться для поиска бэкапов на сайте."
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
+                f"{desc}{paramet}.Просто выведи список бэкап файлов и директорий без своих пояснений.\n"
             ),
             temperature=0.5,
             max_tokens=2048,
@@ -391,21 +399,22 @@ def subdomains(detected_cms):
     print(Bcolors.OKGREEN + "[+]: "+"CHECK SUBDOMAINS")
 
     reg = True
-    def gpt_subdomains(cms):
+    def gpt_subdomains():
 
-        global paramet
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+        print(
+            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
-            paramet = f"Сгенерируй пожалуйста большой список субдоменов для {cms}, которые ты знаешь.\n"
+            paramet = f"Сгенерируй пожалуйста большой список субдоменов для , которые ты знаешь.\n"
         else:
             paramet = parametr
-
+        desc = "Этот список будет использоваться для поиска субдоменов на сайте."
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{paramet}.Просто выведи список субдоменов без своих пояснений.\n"
+                f"{desc}{paramet}.Просто выведи список субдоменов без своих пояснений.\n"
             ),
             temperature=0.5,
             max_tokens=2048,
@@ -427,7 +436,7 @@ def subdomains(detected_cms):
         return result_dict
 
     while reg:
-        directories_dict = gpt_subdomains(detected_cms)
+        directories_dict = gpt_subdomains()
         results = check_files(directories_dict, link)
 
         if txtman:

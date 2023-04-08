@@ -60,21 +60,22 @@ def api_enumeration(link, api_key):
                 return True
         return False
 
-    def gpt(api):
+    def gpt_api(api):
 
-        global paramet
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+        print(
+            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
             paramet = f"Сгенерируй пожалуйста большой список директорий и файлов для API {api}, которые ты знаешь."
         else:
             paramet = parametr
-
+        desc = "Этот словарь будет использоваться для перечисления api"
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
+                f"{desc}{paramet}.Просто выведи список директорий и параметров без своих пояснений.\n"
             ),
             temperature=0.5,
             max_tokens=2048,
@@ -98,7 +99,7 @@ def api_enumeration(link, api_key):
         detected_api = "API: " + detect_api(link)
         print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
-        directories_dict = gpt(detected_api)
+        directories_dict = gpt_api(detected_api)
 
         results = check_api(directories_dict, link)
         for result in results:
