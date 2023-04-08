@@ -8,6 +8,4 @@ WORKDIR /usr/src/gptbuster
 
 COPY . /usr/src/gptbuster
 
-RUN pip install -r requirements.txt && \
-    echo 'gptbuster image was created' && \
-    python3 main.py
+RUN pip install -r requirements.txt 
