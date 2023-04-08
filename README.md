@@ -15,13 +15,13 @@ python3 main.py -h
 
 python3 main.py <website> <api-key>
 
-ex: python3 main.py https://google.com/ sk*********** --other
+ex: python3 main.py https://google.com/ sk*********** <args>
 
 # Docker
 
 docker build -t gptbuster . 
 
-ex: sudo docker run -it <image_name> bash -c "python3 main.py <site> <api_key> --backup"
+ex: sudo docker run -it <image_name> https://google.com/ sk*********** --other <args>
 
 
 
