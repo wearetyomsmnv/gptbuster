@@ -79,7 +79,7 @@ directories_dict = {}
 directories_dict2 = {}
 detected_cms = ""
 detected_api = ""
-
+txtman = ""
 
 def check_files(dictionary_dir, link):
     directories = []
