@@ -15,6 +15,12 @@ python3 main.py -h
 
 python3 main.py <website> <api-key>
 
+# Docker
+
+docker build -t gptbuster . 
+
+docker run -it <container name> <args> 
+
 
 ex: python3 main.py https://google.com/ sk*********** --other
 
