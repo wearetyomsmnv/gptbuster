@@ -9,3 +9,5 @@ WORKDIR /usr/src/gptbuster
 COPY . /usr/src/gptbuster
 
 RUN pip install -r requirements.txt 
+
+CMD ["python","main.py"]
