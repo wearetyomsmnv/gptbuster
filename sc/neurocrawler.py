@@ -18,6 +18,8 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def gpt(api_key):
+
+
     print(Bcolors.OKGREEN + "[+]: " + "CRAWLING")
 
     openai.api_key = api_key

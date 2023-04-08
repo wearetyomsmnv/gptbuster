@@ -7,7 +7,6 @@ import signal
 import sys
 
 
-
 def signal_handler(sig, frame):
     print("\nПрограмма завершена пользователем.")
     sys.exit(0)
@@ -18,6 +17,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def api_enumeration(link, api_key):
 
+    reg = True
     openai.api_key = api_key
 
     print(Bcolors.OKGREEN + "[+]: " + "CHECK API")
@@ -94,11 +94,19 @@ def api_enumeration(link, api_key):
 
         return result_dict
 
-    detected_api = "API: " + detect_api(link)
-    print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
+    while reg:
+        detected_api = "API: " + detect_api(link)
+        print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
-    directories_dict = gpt(detected_api)
+        directories_dict = gpt(detected_api)
 
-    results = check_api(directories_dict, link)
-    for result in results:
-        print(result)
+        results = check_api(directories_dict, link)
+        for result in results:
+            print(result)
+
+        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+        usl = input(str("Ответ: "))
+        if usl.lower() == "yes":
+            continue
+        else:
+            break

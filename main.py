@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import sys
 from termcolor import cprint
 from alive_progress import alive_bar
+import os
 
 sys.path.append("sc")
 
@@ -31,7 +32,7 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.0')
+print(Bcolors.HEADER + 'build 1.3.1')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzer for penetration testers with <3')
@@ -46,6 +47,7 @@ commands.add_argument('--backup', action='store_true', help='Поиск бека
 commands.add_argument('--subdomains', action='store_true', help='Перечисление субдоменов')
 commands.add_argument('--api_enum', action='store_true', help='Фаззинг по апи')
 commands.add_argument('--crawler', action='store_true', help='Black-box crawler')
+commands.add_argument('--output', action='store_true', default=False, help='.txt output')
 
 
 args1 = commands.parse_args()
@@ -57,6 +59,7 @@ backups = args1.backup
 subdomains = args1.subdomains
 api_enum = args1.api_enum
 crawler = args1.crawler
+output = args1.output
 
 
 if not any([link, api_key]):
@@ -65,7 +68,7 @@ if not any([link, api_key]):
     sys.exit()
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler]):
+            api_enumeration, crawler, output]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit()
@@ -95,7 +98,6 @@ def check_files(dictionary_dir, link):
 
 def gpt(cms):
 
-    global paramet
     print(Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
     parametr = input(str("param: "))
     if parametr == "default":
@@ -206,8 +208,6 @@ def check_1c_bitrix(linked):
     return False
 
 
-
-
 def detect_cms(linked):
     response = requests.get(linked)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -248,6 +248,7 @@ def detect_cms(linked):
     else:
         return "CMS не определена"
 
+
 detected_cms = "Для CMS: " + detect_cms(link)
 print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
@@ -255,9 +256,9 @@ print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 def insecure(detected_cms):
     print(Bcolors.OKGREEN + "[+]: "+"CHECK INSECURE DIR")
 
+    reg = True
     def gpt_insecure(cms):
 
-        global paramet
         print(Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
         parametr = input(str("param: "))
         if parametr == "default":
@@ -286,21 +287,38 @@ def insecure(detected_cms):
 
         return result_dict
 
+    while reg:
+        directories_dict = gpt_insecure(detected_cms)
 
-    directories_dict = gpt_insecure(detected_cms)
+        results_insecure = check_files(directories_dict, link)
 
-    results_insecure = check_files(directories_dict, link)
-    for result in results_insecure:
-        print(result)
+        if txtman:
+            name = input(str("Введите имя для файла: "))
+            with open(f"{name}.txt", "w") as f:
+                for result in results_insecure:
+                    f.write(result)
+                f.close()
+                print(f"File name {name}.txt was created in {os.getcwd()} ")
+        else:
+            for result in results_insecure:
+                print(result)
+
+        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+        usl = input(str("Ответ: "))
+        if usl.lower() == "yes":
+            continue
+        else:
+            break
 
 
 def backups(detected_cms):
+
+    reg = True
 
     print(Bcolors.OKGREEN + "[+]: "+"CHECK BACKUP FILES")
 
     def gpt_backups(cms):
 
-        global paramet
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
         parametr = input(str("param: "))
@@ -330,12 +348,28 @@ def backups(detected_cms):
 
         return result_dict
 
+    while reg:
+        directories_dict = gpt_backups(detected_cms)
 
-    directories_dict = gpt_backups(detected_cms)
+        results_backups = check_files(directories_dict, link)
 
-    results_backups = check_files(directories_dict, link)
-    for result in results_backups:
-        print(result)
+        if txtman:
+            name = input(str("Введите имя для файла: "))
+            with open(f"{name}.txt", "w") as f:
+                for result in results_backups:
+                    f.write(result)
+                f.close()
+                print(f"File name {name}.txt was created in {os.getcwd()} ")
+        else:
+            for result in results_backups:
+                print(result)
+
+        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+        usl = input(str("Ответ: "))
+        if usl.lower() == "yes":
+            continue
+        else:
+            break
 
 
 def check_subdomains(dictionary_dir, link):
@@ -353,12 +387,10 @@ def check_subdomains(dictionary_dir, link):
     return directories
 
 
-
-
 def subdomains(detected_cms):
     print(Bcolors.OKGREEN + "[+]: "+"CHECK SUBDOMAINS")
 
-
+    reg = True
     def gpt_subdomains(cms):
 
         global paramet
@@ -394,23 +426,32 @@ def subdomains(detected_cms):
 
         return result_dict
 
-    directories_dict = gpt_subdomains(detected_cms)
+    while reg:
+        directories_dict = gpt_subdomains(detected_cms)
+        results = check_files(directories_dict, link)
 
-    if directories_dict is not None:
-        results_subdomains = check_subdomains(directories_dict, link)
+        if txtman:
+            name = input(str("Введите имя для файла: "))
+            with open(f"{name}.txt", "w") as f:
+                for result in results:
+                    f.write(result)
+                f.close()
+                print(f"File name {name}.txt was created in {os.getcwd()} ")
+        else:
+            for result in results:
+                print(result)
 
-        for result in results_subdomains:
-            print(result)
-    else:
-        print("Ошибка: Словарь субдоменов не был сгенерирован.")
-
-    results = check_files(directories_dict, link)
-    for result in results:
-        print(result)
-
+        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+        usl = input(str("Ответ: "))
+        if usl.lower() == "yes":
+            continue
+        else:
+            break
 
 
 if __name__ == '__main__':
+    if args1.output:
+        txtman = True
     if args1.backup:
         backups(detected_cms)
     if args1.subdomains:
