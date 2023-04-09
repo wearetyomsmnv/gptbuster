@@ -18,10 +18,9 @@ pip3 install -r requirements
 python3 main.py -h 
 ```
 
-
-python3 main.py <website> <api-key>
-
-ex: python3 main.py https://google.com/ sk*********** 0.12 <args>
+```
+example: python3 main.py https://google.com/ sk*********** 0.12 --subdomains
+```
 
 
 # Docker
@@ -30,8 +29,9 @@ ex: python3 main.py https://google.com/ sk*********** 0.12 <args>
 docker build -t gptbuster . 
 ```
 
-ex: sudo docker run -it <image_name> https://google.com/ sk*********** 0.12 <args>
-
+```
+example: sudo docker run -it <image_name> https://google.com/ sk*********** 0.12 --subdomains
+```
 
 
 # Python venv
