@@ -16,7 +16,7 @@ git clone https://github.com/wearetyomsmnv/gptbuster
 cd gptbuster
 ```
 ```
-pip3 install -r requirements
+pip3 install -r requirements.txt
 ```
 ```
 python3 main.py -h 
