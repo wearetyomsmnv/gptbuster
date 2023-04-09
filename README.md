@@ -63,7 +63,7 @@ virtualenv gptbuster_venv
 
 ### Linux:
 ```
- souce gptbuster_venv/bin/activate
+ source gptbuster_venv/bin/activate
 ```
 
 ### Windows:
