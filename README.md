@@ -21,7 +21,7 @@ python3 main.py -h
 
 python3 main.py <website> <api-key>
 
-ex: python3 main.py https://google.com/ sk*********** <args>
+ex: python3 main.py https://google.com/ sk*********** 0.12 <args>
 
 
 # Docker
@@ -30,7 +30,7 @@ ex: python3 main.py https://google.com/ sk*********** <args>
 docker build -t gptbuster . 
 ```
 
-ex: sudo docker run -it <image_name> https://google.com/ sk*********** --other <args>
+ex: sudo docker run -it <image_name> https://google.com/ sk*********** 0.12 <args>
 
 
 
