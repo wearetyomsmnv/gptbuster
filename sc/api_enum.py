@@ -60,17 +60,20 @@ def api_enumeration(link, api_key, temp, headers, cookies):
                 return True
         return False
 
-    def gpt_api(api, temp):
+    def gpt_api(api, temp, paramet=""):
+
+        if paramet == "":
+            print(
+                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+        else:
+            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
 
         print(
-            Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
-        print(
             Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-        parametr = input(str("param: "))
-        if parametr == "default":
+        if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список директорий и файлов для API {api}, которые ты знаешь."
-        else:
-            paramet = parametr
+        elif paramet == "":
+            paramet = input(str("param: "))
         desc = "Этот словарь будет использоваться для перечисления api"
 
         response = openai.Completion.create(
@@ -96,19 +99,39 @@ def api_enumeration(link, api_key, temp, headers, cookies):
 
         return result_dict
 
+    last_directories = None
+    last_paramet = None
+
     while reg:
         detected_api = "API: " + detect_api(link, headers, cookies)
         print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
-        directories_dict = gpt_api(detected_api, temp)
+        if last_directories is None:
+            paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+            directories_dict = gpt_api(detected_api, temp, paramet)
+        else:
+            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
+            choice = input(str("Ответ: "))
+            if choice.lower() == "yes":
+                directories_dict = last_directories
+                paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+                if paramet != "":
+                    last_paramet = paramet
+            else:
+                paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+                if paramet == "":
+                    paramet = last_paramet
+                directories_dict = gpt_api(detected_api, temp, paramet)
 
         results = check_api(directories_dict, link, headers, cookies)
         for result in results:
             print(result)
 
-        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+        last_directories = directories_dict
+        print(Bcolors.OKCYAN + "[?]: " + "Хотите попробовать снова? [yes/no]")
         usl = input(str("Ответ: "))
         if usl.lower() == "yes":
             continue
         else:
             break
+

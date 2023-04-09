@@ -34,7 +34,7 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.3')
+print(Bcolors.HEADER + 'build 1.3.4')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
@@ -107,9 +107,7 @@ cookies = {'Cookie': args1.cookies} if args1.cookies else {}
 headers = {'Authorization': args1.basic_auth} if args1.basic_auth else {}
 
 
-
-
-def check_files(dictionary_dir, link):
+def check_files(dictionary_dir, link, headers, cookies):
     directories = []
     print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
     with alive_bar(len(dictionary_dir)) as bar:
@@ -153,10 +151,12 @@ def gpt(cms):
 
     print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
 
+
     return result_dict
 
 
-results = check_files(directories_dict, link)
+
+results = check_files(directories_dict, link, headers, cookies)
 for result in results:
     print(result)
 
@@ -237,7 +237,7 @@ def check_1c_bitrix(linked):
     return False
 
 
-def detect_cms(link):
+def detect_cms(link, headers, cookies):
     response = requests.get(link, headers=headers, cookies=cookies)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -272,7 +272,7 @@ def detect_cms(link):
         return Bcolors.FAIL + "Не определено"
 
 
-detected_cms = detect_cms(link)
+detected_cms = detect_cms(link, headers, cookies)
 print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
 
@@ -281,19 +281,20 @@ def insecure(detected_cms):
 
     reg = True
 
-    def gpt_insecure(cms):
+    def gpt_insecure(cms, paramet=None):
+
+        if paramet == None:
+            print(
+                Bcolors.OKCYAN + '[+]: ' + f"Введите свой параметр для генерации словаря {cms} через chatgpt или напишите 'default': ")
+        else:
+            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
 
         desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
-        print(
-            Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
-        print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
 
-        parametr = input(str("param: "))
-        if parametr == "default":
+        if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список небезопасных директорий и параметров для {cms}, которые ты знаешь.Просто выведи список директорий без своих пояснений.\n"
         else:
-            paramet = parametr
+            paramet = paramet
 
         response = openai.Completion.create(
             engine="text-davinci-002",
@@ -317,11 +318,37 @@ def insecure(detected_cms):
 
         return result_dict
 
+    last_insecure_files = None
+    last_paramet = None
+
     while reg:
-        directories_dict = gpt_insecure(detected_cms)
+        detected_cms = "CMS: " + detect_cms(link, headers, cookies)
+        print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
-        results_insecure = check_files(directories_dict, link)
+        if last_insecure_files is None:
+            paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов: "))
+            insecure_files = gpt_insecure(detected_cms, paramet)
+        else:
+            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
+            choice = input(str("Ответ: "))
+            if choice.lower() == "yes":
+                insecure_files = last_insecure_files
+                paramet = input(
+                    str("[+] Введите свой параметр для генерации списка небезопасных файлов (оставьте пустым для использования предыдущего запроса): "))
+                if paramet == "":
+                    paramet = last_paramet
+            else:
+                paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов: "))
+                insecure_files = gpt_insecure(detected_cms, paramet)
 
+        last_insecure_files = insecure_files
+        last_paramet = paramet
+
+        results = check_files(directories_dict, link, headers, cookies)
+        for result in results:
+            print(result)
+
+        results_insecure = check_files(insecure_files, link, headers, cookies)
         if txtman:
             name = input(str("Введите имя для файла: "))
             with open(f"{name}.txt", "w") as f:
@@ -346,18 +373,15 @@ def backups(detected_cms):
 
     print(Bcolors.OKGREEN + "[+]: " + "CHECK BACKUP FILES")
 
-    def gpt_backups(cms):
-
-        print(
-            Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
-        print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-        parametr = input(str("param: "))
-        if parametr == "default":
+    def gpt_backups(cms, paramet=None):
+        if paramet is None:
+            print(
+                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации списка файлов бэкапов через chatgpt или напишите 'default': ")
+            print(
+                Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            paramet = input(str("param: "))
+        if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список файлов, которые могут являться бэкапами для {cms}, которые ты знаешь.\n"
-        else:
-            paramet = parametr
-
         desc = "Этот список будет использоваться для поиска бэкапов на сайте."
         response = openai.Completion.create(
             engine="text-davinci-002",
@@ -381,10 +405,30 @@ def backups(detected_cms):
 
         return result_dict
 
-    while reg:
-        directories_dict = gpt_backups(detected_cms)
+    last_backups = None
+    last_paramet = None
 
-        results_backups = check_files(directories_dict, link)
+    while reg:
+        if last_backups is None:
+            paramet = input(str("[+] Введите свой параметр для генерации списка файлов бэкапов: "))
+            backups_files = gpt_backups(detected_cms, paramet)
+        else:
+            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
+            choice = input(str("Ответ: "))
+            if choice.lower() == "yes":
+                backups_files = last_backups
+                paramet = input(
+                    str("[+] Введите свой параметр для генерации списка файлов бэкапов (оставьте пустым для использования предыдущего запроса): "))
+                if paramet == "":
+                    paramet = last_paramet
+            else:
+                paramet = input(str("[+] Введите свой параметр для генерации списка файлов бэкапов: "))
+                backups_files = gpt_backups(detected_cms, paramet)
+
+        last_backups = backups_files
+        last_paramet = paramet
+
+        results_backups = check_files(backups_files, link, headers, cookies)
 
         if txtman:
             name = input(str("Введите имя для файла: "))
@@ -405,7 +449,7 @@ def backups(detected_cms):
             break
 
 
-def check_subdomains(dictionary_dir, link):
+def check_subdomains(dictionary_dir, link, headers, cookies):
     directories = []
     print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
     with alive_bar(len(dictionary_dir)) as bar:
@@ -423,22 +467,24 @@ def check_subdomains(dictionary_dir, link):
     return directories
 
 
-def subdomains():
+def subdomains(txtman, link, headers, cookies, temp):
     print(Bcolors.OKGREEN + "[+]: " + "CHECK SUBDOMAINS")
 
     reg = True
+    last_subdomains = None
+    last_paramet = None
 
-    def gpt_subdomains():
+    def gpt_subdomains(paramet=None):
+        nonlocal last_paramet
 
-        print(
-            Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
-        print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-        parametr = input(str("param: "))
-        if parametr == "default":
+        if paramet is None:
+            print(
+                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря субдоменов через chatgpt или напишите 'default': ")
+            print(
+                Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            paramet = input(str("param: "))
+        if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список субдоменов для , которые ты знаешь.\n"
-        else:
-            paramet = parametr
         desc = "Этот список будет использоваться для поиска субдоменов на сайте."
         response = openai.Completion.create(
             engine="text-davinci-002",
@@ -462,11 +508,28 @@ def subdomains():
 
         print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ СУБДОМЕНОВ ГОТОВ")
 
+        last_paramet = paramet
         return result_dict
 
     while reg:
-        directories_dict = gpt_subdomains()
-        results = check_subdomains(directories_dict, link)
+        if last_subdomains is None:
+            subdomains_dict = gpt_subdomains()
+        else:
+            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
+            choice = input(str("Ответ: "))
+            if choice.lower() == "yes":
+                subdomains_dict = last_subdomains
+                paramet = input(
+                    str("[+] Введите свой параметр для генерации списка субдоменов (оставьте пустым для использования предыдущего запроса): "))
+                if paramet == "":
+                    paramet = last_paramet
+            else:
+                paramet = input(str("[+] Введите свой параметр для генерации списка субдоменов: "))
+                subdomains_dict = gpt_subdomains(paramet)
+
+        last_subdomains = subdomains_dict
+
+        results = check_subdomains(subdomains_dict, link, headers, cookies)
 
         if txtman:
             name = input(str("Введите имя для файла: "))
@@ -475,16 +538,23 @@ def subdomains():
                     f.write(result)
                 f.close()
                 print(f"File name {name}.txt was created in {os.getcwd()} ")
-        else:
-            for result in results:
-                print(result)
+                if txtman:
+                    name = input(str("Введите имя для файла: "))
+                    with open(f"{name}.txt", "w") as f:
+                        for result in results:
+                            f.write(result)
+                        f.close()
+                        print(f"File name {name}.txt was created in {os.getcwd()} ")
+                else:
+                    for result in results:
+                        print(result)
 
-        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
-        usl = input(str("Ответ: "))
-        if usl.lower() == "yes":
-            continue
-        else:
-            break
+                print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
+                usl = input(str("Ответ: "))
+                if usl.lower() == "yes":
+                    continue
+                else:
+                    break
 
 
 if __name__ == '__main__':
@@ -493,7 +563,7 @@ if __name__ == '__main__':
     if args1.backup:
         backups(detected_cms)
     if args1.subdomains:
-        subdomains()
+        subdomains(txtman, link, headers, cookies, temp)
     if args1.insecure:
         insecure(detected_cms)
     if args1.api_enum:
