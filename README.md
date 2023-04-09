@@ -18,9 +18,6 @@ cd gptbuster
 ```
 pip3 install -r requirements.txt
 ```
-```
-python3 main.py -h 
-```
 
 ```
 example: python3 main.py https://google.com/ sk*********** 0.12 --subdomains
