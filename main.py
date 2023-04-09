@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import sys
 from termcolor import cprint
 from alive_progress import alive_bar
+from urllib.parse import urlsplit, urlunsplit
 import os
 
 sys.path.append("sc")
@@ -32,23 +33,22 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.1')
+print(Bcolors.HEADER + 'build 1.3.2')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
-print(Bcolors.OKGREEN + 'web fuzzer for penetration testers with <3')
+print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
 
-
-print(Bcolors.FAIL)
-commands = argparse.ArgumentParser(description='GPT-based directory fuzz and crawling')
+print(Bcolors.BOLD)
+commands = argparse.ArgumentParser(description='Основные параметры')
 commands.add_argument('link', help='Укажите ссылку на веб-ресурс')
 commands.add_argument('api_key', help='Укажите api-key для chat-gpt')
+commands.add_argument('temperature', type=float, help='Укажите температуру для параметров [от 0.00 до 1.00]')
 commands.add_argument('--insecure', action='store_true', help='Поиск небезопасных директорий')
 commands.add_argument('--backup', action='store_true', help='Поиск бекапов')
 commands.add_argument('--subdomains', action='store_true', help='Перечисление субдоменов')
 commands.add_argument('--api_enum', action='store_true', help='Фаззинг по апи')
 commands.add_argument('--crawler', action='store_true', help='Black-box crawler')
 commands.add_argument('--output', action='store_true', default=False, help='.txt output')
-
 
 args1 = commands.parse_args()
 
@@ -60,9 +60,9 @@ subdomains = args1.subdomains
 api_enum = args1.api_enum
 crawler = args1.crawler
 output = args1.output
+temp = args1.temperature
 
-
-if not any([link, api_key]):
+if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit()
@@ -75,6 +75,12 @@ if not any([insecure, backups, subdomains,
 
 openai.api_key = api_key
 
+if temp > 1.00:
+    print(Bcolors.FAIL + "[-]: " + "Укажите температуру меньше. openai API не принимает значения больше чем 1.00")
+    sys.exit()
+else:
+    print(Bcolors.OKGREEN + f"Температура: {temp}.")
+
 directories_dict = {}
 directories_dict2 = {}
 detected_cms = ""
@@ -84,7 +90,7 @@ txtman = ""
 
 def check_files(dictionary_dir, link):
     directories = []
-    print(Bcolors.OKCYAN + "[+]: "+"ИДЁТ ПРОВЕРКА")
+    print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
     with alive_bar(len(dictionary_dir)) as bar:
         for key, directory in dictionary_dir.items():
             url = f"{link.lstrip('/')}{directory}"
@@ -98,8 +104,8 @@ def check_files(dictionary_dir, link):
 
 
 def gpt(cms):
-
-    print(Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
+    print(
+        Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
     parametr = input(str("param: "))
     if parametr == "default":
         paramet = f"Сгенерируй пожалуйста большой список директорий и файлов {cms}, которые ты знаешь.\n"
@@ -111,7 +117,7 @@ def gpt(cms):
         prompt=(
             f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
         ),
-        temperature=0.5,
+        temperature=temp,
         max_tokens=2048,
         top_p=1,
         frequency_penalty=0,
@@ -121,7 +127,8 @@ def gpt(cms):
 
     status = response.choices[0].text.split('\n')
 
-    result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in enumerate(status)if item.strip()}
+    result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in enumerate(status)
+                   if item.strip()}
 
     print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
 
@@ -213,57 +220,53 @@ def detect_cms(linked):
     response = requests.get(linked)
     soup = BeautifulSoup(response.text, "html.parser")
 
-        # Check for WordPress
     if soup.find("meta", {"name": "generator", "content": "WordPress"}) or \
-        soup.find_all("link", rel="stylesheet", href=lambda href: href and "wp-content" in href) or \
-        soup.find("script", {"id": "wp-emoji-release"}):
+            soup.find_all("link", rel="stylesheet", href=lambda href: href and "wp-content" in href) or \
+            soup.find("script", {"id": "wp-emoji-release"}):
         return "WordPress"
 
-        # Check for WooCommerce
     if soup.find("meta", {"name": "generator", "content": "WooCommerce"}) or \
-        soup.find_all("link", rel="stylesheet", href=lambda href: href and "woocommerce" in href) or \
-        soup.find("script", {"src": lambda src: src and "woocommerce" in src}):
+            soup.find_all("link", rel="stylesheet", href=lambda href: href and "woocommerce" in href) or \
+            soup.find("script", {"src": lambda src: src and "woocommerce" in src}):
         return "WooCommerce"
 
-        # Check for shopify
     if soup.find("meta", {"name": "generator", "content": "Shopify"}) or \
-        soup.find_all("link", rel="stylesheet", href=lambda href: href and "shopify" in href) or \
-        soup.find("script", {"src": lambda src: src and "shopify" in src}):
+            soup.find_all("link", rel="stylesheet", href=lambda href: href and "shopify" in href) or \
+            soup.find("script", {"src": lambda src: src and "shopify" in src}):
         return "Shopify"
 
-        # Check for Joomla
     elif soup.find("meta", {"name": "generator", "content": "Joomla!"}) or \
-        soup.find_all("link", rel="stylesheet", href=lambda href: href and "joomla" in href) or \
-        soup.title and "Joomla!" in soup.title.string:
+            soup.find_all("link", rel="stylesheet", href=lambda href: href and "joomla" in href) or \
+            soup.title and "Joomla!" in soup.title.string:
         return "Joomla"
 
-        # Check for Drupal
     elif soup.find("meta", {"name": "generator", "content": "Drupal"}):
         return "Drupal"
 
-        # Check for 1C-Bitrix
     elif soup.find("meta", {"name": "generator", "content": "1C-Bitrix"}) or \
-        soup.find_all("link", rel="stylesheet", href=lambda href: href and "bitrix" in href):
+            soup.find_all("link", rel="stylesheet", href=lambda href: href and "bitrix" in href):
         return "1C-Bitrix"
 
     else:
-        return "CMS не определена"
+        return Bcolors.FAIL + "Не определено"
 
 
-detected_cms = "Для CMS: " + detect_cms(link)
+detected_cms = detect_cms(link)
 print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
 
 def insecure(detected_cms):
-    print(Bcolors.OKGREEN + "[+]: "+"CHECK INSECURE DIR")
+    print(Bcolors.OKGREEN + "[+]: " + "CHECK INSECURE DIR")
 
     reg = True
+
     def gpt_insecure(cms):
 
         desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
-        print(Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
         print(
-            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
+        print(
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
 
         parametr = input(str("param: "))
         if parametr == "default":
@@ -276,7 +279,7 @@ def insecure(detected_cms):
             prompt=(
                 f"{desc}{paramet}.Просто выведи список директорий без своих пояснений.\n"
             ),
-            temperature=0.5,
+            temperature=temp,
             max_tokens=2048,
             top_p=1,
             frequency_penalty=0,
@@ -286,7 +289,8 @@ def insecure(detected_cms):
 
         status = response.choices[0].text.split('\n')
 
-        result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in enumerate(status) if item.strip()}
+        result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in
+                       enumerate(status) if item.strip()}
 
         print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
 
@@ -317,17 +321,16 @@ def insecure(detected_cms):
 
 
 def backups(detected_cms):
-
     reg = True
 
-    print(Bcolors.OKGREEN + "[+]: "+"CHECK BACKUP FILES")
+    print(Bcolors.OKGREEN + "[+]: " + "CHECK BACKUP FILES")
 
     def gpt_backups(cms):
 
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
         print(
-            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
             paramet = f"Сгенерируй пожалуйста большой список файлов, которые могут являться бэкапами для {cms}, которые ты знаешь.\n"
@@ -340,7 +343,7 @@ def backups(detected_cms):
             prompt=(
                 f"{desc}{paramet}.Просто выведи список бэкап файлов и директорий без своих пояснений.\n"
             ),
-            temperature=0.5,
+            temperature=temp,
             max_tokens=2048,
             top_p=1,
             frequency_penalty=0,
@@ -350,7 +353,8 @@ def backups(detected_cms):
 
         status = response.choices[0].text.split('\n')
 
-        result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in enumerate(status) if item.strip()}
+        result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in
+                       enumerate(status) if item.strip()}
 
         print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
 
@@ -382,29 +386,33 @@ def backups(detected_cms):
 
 def check_subdomains(dictionary_dir, link):
     directories = []
-    print(Bcolors.OKCYAN + "[+]: "+"ИДЁТ ПРОВЕРКА")
+    print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
     with alive_bar(len(dictionary_dir)) as bar:
-        for key, directory in dictionary_dir.items():
-            url = f"https://{directory}.{link.lstrip('https://')}/"
-            response = requests.get(url)
-            if response.status_code == 200:
-                directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
-            else:
-                directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
+        for key, subdom in dictionary_dir.items():
+            url = urlunsplit(('https', f"{subdom}.{urlsplit(link).hostname}", '', '', ''))
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
+                else:
+                    directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
+            except requests.exceptions.ConnectionError as e:
+                directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url} ({e})")
             bar()
     return directories
 
 
-def subdomains(detected_cms):
-    print(Bcolors.OKGREEN + "[+]: "+"CHECK SUBDOMAINS")
+def subdomains():
+    print(Bcolors.OKGREEN + "[+]: " + "CHECK SUBDOMAINS")
 
     reg = True
+
     def gpt_subdomains():
 
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
         print(
-            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
             paramet = f"Сгенерируй пожалуйста большой список субдоменов для , которые ты знаешь.\n"
@@ -416,7 +424,7 @@ def subdomains(detected_cms):
             prompt=(
                 f"{desc}{paramet}.Просто выведи список субдоменов без своих пояснений.\n"
             ),
-            temperature=0.5,
+            temperature=temp,
             max_tokens=2048,
             top_p=1,
             frequency_penalty=0,
@@ -437,7 +445,7 @@ def subdomains(detected_cms):
 
     while reg:
         directories_dict = gpt_subdomains()
-        results = check_files(directories_dict, link)
+        results = check_subdomains(directories_dict, link)
 
         if txtman:
             name = input(str("Введите имя для файла: "))
@@ -464,12 +472,12 @@ if __name__ == '__main__':
     if args1.backup:
         backups(detected_cms)
     if args1.subdomains:
-        subdomains(detected_cms)
+        subdomains()
     if args1.insecure:
         insecure(detected_cms)
     if args1.api_enum:
         url = link
-        api_enumeration(url, api_key)
+        api_enumeration(url, api_key, temp)
     if args1.crawler:
         url = link
-        web_crawler(url, api_key)
+        web_crawler(url, api_key, temp)

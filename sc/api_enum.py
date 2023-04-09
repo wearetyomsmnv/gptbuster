@@ -15,7 +15,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def api_enumeration(link, api_key):
+def api_enumeration(link, api_key, temp):
 
     reg = True
     openai.api_key = api_key
@@ -43,7 +43,7 @@ def api_enumeration(link, api_key):
         if check_soap_api(f"{link}index.php?wsdl"):
             return "SOAP API"
         else:
-            return "API не определён"
+            return Bcolors.FAIL + "Не определено"
 
     def check_graphql_api(link):
         response = requests.get(link)
@@ -60,24 +60,25 @@ def api_enumeration(link, api_key):
                 return True
         return False
 
-    def gpt_api(api):
+    def gpt_api(api, temp):
 
         print(
             Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
         print(
-            Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         parametr = input(str("param: "))
         if parametr == "default":
             paramet = f"Сгенерируй пожалуйста большой список директорий и файлов для API {api}, которые ты знаешь."
         else:
             paramet = parametr
         desc = "Этот словарь будет использоваться для перечисления api"
+
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
                 f"{desc}{paramet}.Просто выведи список директорий и параметров без своих пояснений.\n"
             ),
-            temperature=0.5,
+            temperature=temp,
             max_tokens=2048,
             top_p=1,
             frequency_penalty=0,
@@ -99,7 +100,7 @@ def api_enumeration(link, api_key):
         detected_api = "API: " + detect_api(link)
         print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
-        directories_dict = gpt_api(detected_api)
+        directories_dict = gpt_api(detected_api, temp)
 
         results = check_api(directories_dict, link)
         for result in results:

@@ -16,7 +16,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def gpt_crawl():
+def gpt_crawl(temp):
 
     print(
         Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
@@ -33,6 +33,12 @@ def gpt_crawl():
         prompt=(
             f"{desc}{paramet}.Просто выведи список директорий для кравлинга без своих пояснений.\n"
         ),
+        temperature=temp,
+        max_tokens=2048,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=["\n\n"],
     )
 
     status = response.choices[0].text.split('\n')
@@ -46,11 +52,11 @@ def gpt_crawl():
     return result_dict
 
 
-def web_crawler(link, api_key):
+def web_crawler(link, api_key, temp):
     openai.api_key = api_key
     visited_urls = set()
     queue = [link]
-    directories_dict = gpt_crawl()
+    directories_dict = gpt_crawl(temp)
 
     while queue:
         current_url = queue.pop(0)
