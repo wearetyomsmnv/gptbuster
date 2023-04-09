@@ -9,6 +9,7 @@ from termcolor import cprint
 from alive_progress import alive_bar
 from urllib.parse import urlsplit, urlunsplit
 import os
+import base64
 
 sys.path.append("sc")
 
@@ -33,7 +34,7 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.2')
+print(Bcolors.HEADER + 'build 1.3.3')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
@@ -49,6 +50,10 @@ commands.add_argument('--subdomains', action='store_true', help='Перечис�
 commands.add_argument('--api_enum', action='store_true', help='Фаззинг по апи')
 commands.add_argument('--crawler', action='store_true', help='Black-box crawler')
 commands.add_argument('--output', action='store_true', default=False, help='.txt output')
+commands.add_argument('--cookies', nargs='?', type=str,  default=False, help='Add self cookies for request')
+commands.add_argument('--basic_auth', nargs='?', type=str,  default=False, help='Add auth data in Authentification(log:pass)')
+commands.add_argument('--b64', action='store_true', default=False, help='base64 for data in Authentification')
+
 
 args1 = commands.parse_args()
 
@@ -61,6 +66,9 @@ api_enum = args1.api_enum
 crawler = args1.crawler
 output = args1.output
 temp = args1.temperature
+cookies = args1.cookies
+basic_auth = args1.basic_auth
+b64 = args1.b64
 
 if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
@@ -68,7 +76,7 @@ if not any([link, api_key, temp]):
     sys.exit()
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler, output]):
+            api_enumeration, crawler, output, cookies, basic_auth, b64]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit()
@@ -87,6 +95,19 @@ detected_cms = ""
 detected_api = ""
 txtman = ""
 
+if b64:
+    if args1.basic_auth:
+        args1.basic_auth = base64.b64encode(args1.basic_auth)
+    else:
+        print("Вы не выбрали аргумент --basic_auth")
+        sys.exit()
+
+
+cookies = {'Cookie': args1.cookies} if args1.cookies else {}
+headers = {'Authorization': args1.basic_auth} if args1.basic_auth else {}
+
+
+
 
 def check_files(dictionary_dir, link):
     directories = []
@@ -94,7 +115,7 @@ def check_files(dictionary_dir, link):
     with alive_bar(len(dictionary_dir)) as bar:
         for key, directory in dictionary_dir.items():
             url = f"{link.lstrip('/')}{directory}"
-            response = requests.get(url)
+            response = requests.get(url, headers=headers, cookies=cookies)
             if response.status_code == 200:
                 directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
             else:
@@ -141,11 +162,11 @@ for result in results:
 
 
 def check_wordpress(linked):
-    response = requests.get(f"{linked}wp-login.php")
+    response = requests.get(f"{linked}wp-login.php", headers=headers, cookies=cookies)
     if response.status_code == 200:
         return True
 
-    response = requests.get(f"{linked}wp-includes/")
+    response = requests.get(f"{linked}wp-includes/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WordPress"}):
@@ -154,8 +175,8 @@ def check_wordpress(linked):
     return False
 
 
-def check_woocommerce(linked):
-    response = requests.get(linked)
+def check_woocommerce(link):
+    response = requests.get(link, headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WooCommerce"}):
@@ -165,19 +186,19 @@ def check_woocommerce(linked):
 
 
 def check_joomla(linked):
-    response = requests.get(f"{linked}administrator/")
+    response = requests.get(f"{linked}administrator/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
-    response = requests.get(f"{linked}templates/")
+    response = requests.get(f"{linked}templates/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
-    response = requests.get(f"{linked}components/")
+    response = requests.get(f"{linked}components/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
@@ -187,7 +208,7 @@ def check_joomla(linked):
 
 
 def check_drupal(linked):
-    response = requests.get(f"{linked}modules/")
+    response = requests.get(f"{linked}modules/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Drupal"}):
@@ -196,8 +217,8 @@ def check_drupal(linked):
     return False
 
 
-def check_shopify(linked):
-    response = requests.get(linked)
+def check_shopify(link):
+    response = requests.get(link, headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Shopify"}):
@@ -207,7 +228,7 @@ def check_shopify(linked):
 
 
 def check_1c_bitrix(linked):
-    response = requests.get(f"{linked}bitrix/")
+    response = requests.get(f"{linked}bitrix/", headers=headers, cookies=cookies)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "1C-Bitrix"}):
@@ -216,8 +237,8 @@ def check_1c_bitrix(linked):
     return False
 
 
-def detect_cms(linked):
-    response = requests.get(linked)
+def detect_cms(link):
+    response = requests.get(link, headers=headers, cookies=cookies)
     soup = BeautifulSoup(response.text, "html.parser")
 
     if soup.find("meta", {"name": "generator", "content": "WordPress"}) or \
@@ -391,7 +412,7 @@ def check_subdomains(dictionary_dir, link):
         for key, subdom in dictionary_dir.items():
             url = urlunsplit(('https', f"{subdom}.{urlsplit(link).hostname}", '', '', ''))
             try:
-                response = requests.get(url)
+                response = requests.get(url, headers=headers, cookies=cookies)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
                 else:
@@ -477,7 +498,7 @@ if __name__ == '__main__':
         insecure(detected_cms)
     if args1.api_enum:
         url = link
-        api_enumeration(url, api_key, temp)
+        api_enumeration(url, api_key, temp, headers, cookies)
     if args1.crawler:
         url = link
-        web_crawler(url, api_key, temp)
+        web_crawler(url, api_key, temp, headers, cookies)

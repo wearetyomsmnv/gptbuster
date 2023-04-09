@@ -52,7 +52,7 @@ def gpt_crawl(temp):
     return result_dict
 
 
-def web_crawler(link, api_key, temp):
+def web_crawler(link, api_key, temp, headers, cookies):
     openai.api_key = api_key
     visited_urls = set()
     queue = [link]
@@ -67,7 +67,7 @@ def web_crawler(link, api_key, temp):
         print(Bcolors.OKCYAN + f"Check: {current_url}")
 
         try:
-            response = requests.get(current_url)
+            response = requests.get(current_url, headers=headers, cookies=cookies)
         except requests.exceptions.RequestException:
             continue
 

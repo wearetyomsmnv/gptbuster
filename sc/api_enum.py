@@ -15,20 +15,20 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def api_enumeration(link, api_key, temp):
+def api_enumeration(link, api_key, temp, headers, cookies):
 
     reg = True
     openai.api_key = api_key
 
     print(Bcolors.OKGREEN + "[+]: " + "CHECK API")
 
-    def check_api(dictionary_dir, link):
+    def check_api(dictionary_dir, link, headers, cookies):
         directories = []
         print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
         with alive_bar(len(dictionary_dir)) as bar:
             for key, directory in dictionary_dir.items():
                 url = f"{link.lstrip('/')}{directory}"
-                response = requests.get(url)
+                response = requests.get(url, headers=headers, cookies=cookies)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
                 else:
@@ -36,24 +36,24 @@ def api_enumeration(link, api_key, temp):
                 bar()
         return directories
 
-    def detect_api(link):
+    def detect_api(link, headers, cookies):
 
-        if check_graphql_api(link):
+        if check_graphql_api(link, headers, cookies):
             return "GraphQL"
-        if check_soap_api(f"{link}index.php?wsdl"):
+        if check_soap_api(f"{link}index.php?wsdl", headers, cookies):
             return "SOAP API"
         else:
             return Bcolors.FAIL + "Не определено"
 
-    def check_graphql_api(link):
-        response = requests.get(link)
+    def check_graphql_api(link, headers, cookies):
+        response = requests.get(link, headers=headers, cookies=cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("script", {"src": lambda src: src and "/graphql" in src}):
             return "GraphQL"
         return False
 
-    def check_soap_api(url):
-        response = requests.get(url)
+    def check_soap_api(url, headers, cookies):
+        response = requests.get(url, headers=headers, cookies=cookies)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
             if soup.find("wsdl:definitions") or soup.find("soap:Envelope"):
@@ -97,12 +97,12 @@ def api_enumeration(link, api_key, temp):
         return result_dict
 
     while reg:
-        detected_api = "API: " + detect_api(link)
+        detected_api = "API: " + detect_api(link, headers, cookies)
         print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
         directories_dict = gpt_api(detected_api, temp)
 
-        results = check_api(directories_dict, link)
+        results = check_api(directories_dict, link, headers, cookies)
         for result in results:
             print(result)
 
