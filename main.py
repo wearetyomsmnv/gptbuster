@@ -34,7 +34,7 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.4')
+print(Bcolors.HEADER + 'build 1.3.5')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
@@ -53,6 +53,7 @@ commands.add_argument('--output', action='store_true', default=False, help='.txt
 commands.add_argument('--cookies', nargs='?', type=str,  default=False, help='Add self cookies for request')
 commands.add_argument('--basic_auth', nargs='?', type=str,  default=False, help='Add auth data in Authentification(log:pass)')
 commands.add_argument('--b64', action='store_true', default=False, help='base64 for data in Authentification')
+commands.add_argument('--response', action='store_true', default=False, help='View responses for all requests')
 
 
 args1 = commands.parse_args()
@@ -69,6 +70,7 @@ temp = args1.temperature
 cookies = args1.cookies
 basic_auth = args1.basic_auth
 b64 = args1.b64
+responses = args1.response
 
 if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
@@ -76,7 +78,7 @@ if not any([link, api_key, temp]):
     sys.exit()
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler, output, cookies, basic_auth, b64]):
+            api_enumeration, crawler, output, cookies, basic_auth, b64, responses]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit()
@@ -103,8 +105,11 @@ if b64:
         sys.exit()
 
 
-cookies = {'Cookie': args1.cookies} if args1.cookies else {}
-headers = {'Authorization': args1.basic_auth} if args1.basic_auth else {}
+cookies = {'Cookie': args1.cookies,
+            'User-agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
+           } if args1.cookies else {}
+headers = {'Authorization': args1.basic_auth,
+           'User-agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'} if args1.basic_auth else {}
 
 
 def check_files(dictionary_dir, link, headers, cookies):
@@ -116,6 +121,11 @@ def check_files(dictionary_dir, link, headers, cookies):
             response = requests.get(url, headers=headers, cookies=cookies)
             if response.status_code == 200:
                 directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
+                if args1.response:
+                    print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+                    print(response.text)
+                    print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+                    print(response.cookies)
             else:
                 directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
             bar()
@@ -151,9 +161,7 @@ def gpt(cms):
 
     print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
 
-
     return result_dict
-
 
 
 results = check_files(directories_dict, link, headers, cookies)
@@ -164,10 +172,20 @@ for result in results:
 def check_wordpress(linked):
     response = requests.get(f"{linked}wp-login.php", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         return True
 
     response = requests.get(f"{linked}wp-includes/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WordPress"}):
             return True
@@ -178,6 +196,11 @@ def check_wordpress(linked):
 def check_woocommerce(link):
     response = requests.get(link, headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WooCommerce"}):
             return True
@@ -188,18 +211,33 @@ def check_woocommerce(link):
 def check_joomla(linked):
     response = requests.get(f"{linked}administrator/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
     response = requests.get(f"{linked}templates/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
     response = requests.get(f"{linked}components/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
@@ -210,6 +248,11 @@ def check_joomla(linked):
 def check_drupal(linked):
     response = requests.get(f"{linked}modules/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Drupal"}):
             return True
@@ -220,6 +263,11 @@ def check_drupal(linked):
 def check_shopify(link):
     response = requests.get(link, headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Shopify"}):
             return True
@@ -230,6 +278,11 @@ def check_shopify(link):
 def check_1c_bitrix(linked):
     response = requests.get(f"{linked}bitrix/", headers=headers, cookies=cookies)
     if response.status_code == 200:
+        if args1.response:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "1C-Bitrix"}):
             return True
@@ -281,20 +334,23 @@ def insecure(detected_cms):
 
     reg = True
 
-    def gpt_insecure(cms, paramet=None):
+    def gpt_insecure(cms, paramet=""):
 
-        if paramet == None:
+        if paramet == "":
             print(
                 Bcolors.OKCYAN + '[+]: ' + f"Введите свой параметр для генерации словаря {cms} через chatgpt или напишите 'default': ")
         else:
             print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
 
-        desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
+        print(
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
 
         if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список небезопасных директорий и параметров для {cms}, которые ты знаешь.Просто выведи список директорий без своих пояснений.\n"
-        else:
-            paramet = paramet
+        elif paramet == "":
+            paramet = input(str("param: "))
+
+        desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
 
         response = openai.Completion.create(
             engine="text-davinci-002",
@@ -373,16 +429,21 @@ def backups(detected_cms):
 
     print(Bcolors.OKGREEN + "[+]: " + "CHECK BACKUP FILES")
 
-    def gpt_backups(cms, paramet=None):
-        if paramet is None:
+    def gpt_backups(cms, paramet=""):
+        if paramet == "":
             print(
                 Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации списка файлов бэкапов через chatgpt или напишите 'default': ")
-            print(
-                Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-            paramet = input(str("param: "))
+        else:
+            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
+
+        print(
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
         if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список файлов, которые могут являться бэкапами для {cms}, которые ты знаешь.\n"
+        elif paramet == "":
+            paramet = input(str("param: "))
         desc = "Этот список будет использоваться для поиска бэкапов на сайте."
+
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
@@ -459,6 +520,11 @@ def check_subdomains(dictionary_dir, link, headers, cookies):
                 response = requests.get(url, headers=headers, cookies=cookies)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
+                    if args1.response:
+                        print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+                        print(response.text)
+                        print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+                        print(response.cookies)
                 else:
                     directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
             except requests.exceptions.ConnectionError as e:
@@ -467,24 +533,30 @@ def check_subdomains(dictionary_dir, link, headers, cookies):
     return directories
 
 
-def subdomains(txtman, link, headers, cookies, temp):
+def subdomains():
     print(Bcolors.OKGREEN + "[+]: " + "CHECK SUBDOMAINS")
 
     reg = True
     last_subdomains = None
     last_paramet = None
 
-    def gpt_subdomains(paramet=None):
+    def gpt_subdomains(paramet=""):
         nonlocal last_paramet
 
-        if paramet is None:
+        if paramet == "":
             print(
                 Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря субдоменов через chatgpt или напишите 'default': ")
-            print(
-                Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-            paramet = input(str("param: "))
+        else:
+            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
+
+        print(
+            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+
         if paramet == "default":
             paramet = f"Сгенерируй пожалуйста большой список субдоменов для , которые ты знаешь.\n"
+        elif paramet == "":
+            paramet = input(str("param: "))
+
         desc = "Этот список будет использоваться для поиска субдоменов на сайте."
         response = openai.Completion.create(
             engine="text-davinci-002",
@@ -563,12 +635,12 @@ if __name__ == '__main__':
     if args1.backup:
         backups(detected_cms)
     if args1.subdomains:
-        subdomains(txtman, link, headers, cookies, temp)
+        subdomains()
     if args1.insecure:
         insecure(detected_cms)
     if args1.api_enum:
         url = link
-        api_enumeration(url, api_key, temp, headers, cookies)
+        api_enumeration(url, api_key, temp, headers, cookies, args1.response)
     if args1.crawler:
         url = link
-        web_crawler(url, api_key, temp, headers, cookies)
+        web_crawler(url, api_key, temp, headers, cookies, args1.response)

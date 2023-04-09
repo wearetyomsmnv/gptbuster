@@ -15,14 +15,14 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def api_enumeration(link, api_key, temp, headers, cookies):
+def api_enumeration(link, api_key, temp, headers, cookies, responses):
 
     reg = True
     openai.api_key = api_key
 
     print(Bcolors.OKGREEN + "[+]: " + "CHECK API")
 
-    def check_api(dictionary_dir, link, headers, cookies):
+    def check_api(dictionary_dir, link, headers, cookies, responses):
         directories = []
         print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
         with alive_bar(len(dictionary_dir)) as bar:
@@ -31,6 +31,11 @@ def api_enumeration(link, api_key, temp, headers, cookies):
                 response = requests.get(url, headers=headers, cookies=cookies)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
+                    if responses:
+                        print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+                        print(response.text)
+                        print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+                        print(response.cookies)
                 else:
                     directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
                 bar()
@@ -38,23 +43,33 @@ def api_enumeration(link, api_key, temp, headers, cookies):
 
     def detect_api(link, headers, cookies):
 
-        if check_graphql_api(link, headers, cookies):
+        if check_graphql_api(link, headers, cookies, responses):
             return "GraphQL"
-        if check_soap_api(f"{link}index.php?wsdl", headers, cookies):
+        if check_soap_api(f"{link}index.php?wsdl", headers, cookies, responses):
             return "SOAP API"
         else:
             return Bcolors.FAIL + "Не определено"
 
-    def check_graphql_api(link, headers, cookies):
+    def check_graphql_api(link, headers, cookies, responses):
         response = requests.get(link, headers=headers, cookies=cookies)
+        if responses:
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+            print(response.text)
+            print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+            print(response.cookies)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("script", {"src": lambda src: src and "/graphql" in src}):
             return "GraphQL"
         return False
 
-    def check_soap_api(url, headers, cookies):
+    def check_soap_api(url, headers, cookies, responses):
         response = requests.get(url, headers=headers, cookies=cookies)
         if response.status_code == 200:
+            if responses:
+                print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
+                print(response.text)
+                print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
+                print(response.cookies)
             soup = BeautifulSoup(response.text, "html.parser")
             if soup.find("wsdl:definitions") or soup.find("soap:Envelope"):
                 return True
@@ -123,7 +138,7 @@ def api_enumeration(link, api_key, temp, headers, cookies):
                     paramet = last_paramet
                 directories_dict = gpt_api(detected_api, temp, paramet)
 
-        results = check_api(directories_dict, link, headers, cookies)
+        results = check_api(directories_dict, link, headers, cookies, responses)
         for result in results:
             print(result)
 
