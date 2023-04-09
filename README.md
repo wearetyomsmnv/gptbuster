@@ -1,50 +1,59 @@
 # gptbuster
 Webdir fuzzer based on ChatGPT
 
-# USAGE
 
 
+# Usage
+
+```
 git clone https://github.com/wearetyomsmnv/gptbuster
-
+```
+```
 cd gptbuster
-
+```
+```
 pip3 install -r requirements
-
+```
+```
 python3 main.py -h 
+```
 
 
 python3 main.py <website> <api-key>
 
 ex: python3 main.py https://google.com/ sk*********** <args>
 
+
 # Docker
 
+```
 docker build -t gptbuster . 
+```
 
 ex: sudo docker run -it <image_name> https://google.com/ sk*********** --other <args>
 
 
 
+### Options
 
-# ЧТО МОЖЕТ УЖЕ
 
-Поддержка следующих cms:
-Bitrix,
-Wordpress,
-Joomla,
-Drupal,
-WooCommerce,
-Shopify.
+```
+Основные параметры
 
-- Перечисление субдоменов (--subdomains)
- 
-- Поиск небезопасных директорий по сгенерированному словарю (--insecure)
+positional arguments:
+  link          Укажите ссылку на веб-ресурс
+  api_key       Укажите api-key для chat-gpt
+  temperature   Укажите температуру для параметров [от 0.00 до 1.00]
 
-- Поиск бекапов также по сгенерированному словарю (--backup)
-
-- Перечисление api (--api_enum)
-
-- Добавлен кравлинг (--crawl)
+options:
+  -h, --help    show this help message and exit
+  --insecure    Поиск небезопасных директорий
+  --backup      Поиск бекапов
+  --subdomains  Перечисление субдоменов
+  --api_enum    Фаззинг по апи
+  --crawler     Black-box crawler
+  --output      .txt output
+```
 
 # PS
 
