@@ -1,8 +1,8 @@
-#gptbuster
+# gptbuster
 Webdir fuzzer based on ChatGPT
 
 
-#Зачем вообще gptbuster ?
+# Зачем вообще gptbuster ?
 
 gptbuster - призван решить проблему, когда не имея словаря - нам нужно просмотреть директории, файлы или параметры на сайте. Особенность в том, что gptbuster работает с chatgpt и любой пользователь может максимально быстро создать словарь любой сложности. Будь то многоуровневый, по маске или с параметрами или всё вместе для того чтобы имея частичные данные о том, что может быть на сайте вообще или вовсе не располагая данными - можно было провести перечисление для дальнейшего развития при пентесте. 
 
@@ -12,7 +12,7 @@ gptbuster - призван решить проблему, когда не име
 
 [![image-2.jpg](https://i.postimg.cc/W4jWtC7T/image-2.jpg)](https://postimg.cc/TK7q4kS4)
 
-#Usage
+# Usage
 
 ```
 git clone https://github.com/wearetyomsmnv/gptbuster
@@ -29,7 +29,7 @@ example: python3 main.py https://google.com/ sk*********** 0.12 --subdomains
 ```
 
 
-#Docker
+# Docker
 
 ```
 docker build -t gptbuster . 
@@ -40,7 +40,7 @@ example: sudo docker run -it <image_name> https://google.com/ sk*********** 0.12
 ```
 
 
-#Python venv
+# python venv
 
 Переходим в папку с проектом
 ```
@@ -61,12 +61,12 @@ virtualenv gptbuster_venv
 
 После чего нам необходимо активировать виртуальное окружение
 
-###Linux:
+### Linux:
 ```
  souce gptbuster_venv/bin/activate
 ```
 
-###Windows:
+### Windows:
 
 ```
  gptbuster_venv\Scripts\activate
@@ -81,7 +81,7 @@ virtualenv gptbuster_venv
 
 
 
-##Options
+## Options
 
 
 ```
@@ -116,10 +116,10 @@ options:
 
 ```
 
-#PS
+# PS
 
 Наслаждайся. В скором времени будут добавлены крутые фичи! :joy:
 
-#Проблемы с которыми можно столкнуться.
+# Проблемы с которыми можно столкнуться.
 
 GPT - это генеративная нейросеть и порой данные, которые получаем мы при запросе - имеют много мусора и неточностей. Это приводит к фактору непредсказуемости при использовании данных. Возможно со временем удастся изобрести универсальный промпт
