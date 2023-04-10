@@ -34,7 +34,7 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.5')
+print(Bcolors.HEADER + 'build 1.3.6')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
@@ -54,6 +54,7 @@ commands.add_argument('--cookies', nargs='?', type=str,  default=False, help='Ad
 commands.add_argument('--basic_auth', nargs='?', type=str,  default=False, help='Add auth data in Authentification(log:pass)')
 commands.add_argument('--b64', action='store_true', default=False, help='base64 for data in Authentification')
 commands.add_argument('--response', action='store_true', default=False, help='View responses for all requests')
+commands.add_argument('--headers', action='store_true', default=False, help='View headers for all requests')
 
 
 args1 = commands.parse_args()
@@ -71,23 +72,24 @@ cookies = args1.cookies
 basic_auth = args1.basic_auth
 b64 = args1.b64
 responses = args1.response
+headeers = args1.headers
 
 if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
-    sys.exit()
+    sys.exit(0)
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler, output, cookies, basic_auth, b64, responses]):
+            api_enumeration, crawler, output, cookies, basic_auth, b64, responses, headeers]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
-    sys.exit()
+    sys.exit(0)
 
 openai.api_key = api_key
 
 if temp > 1.00:
     print(Bcolors.FAIL + "[-]: " + "Укажите температуру меньше. openai API не принимает значения больше чем 1.00")
-    sys.exit()
+    sys.exit(0)
 else:
     print(Bcolors.OKGREEN + f"Температура: {temp}.")
 
@@ -102,7 +104,7 @@ if b64:
         args1.basic_auth = base64.b64encode(args1.basic_auth)
     else:
         print("Вы не выбрали аргумент --basic_auth")
-        sys.exit()
+        sys.exit(0)
 
 
 cookies = {'Cookie': args1.cookies,
@@ -126,6 +128,9 @@ def check_files(dictionary_dir, link, headers, cookies):
                     print(response.text)
                     print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
                     print(response.cookies)
+                if args1.headers:
+                    print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+                    print(response.headers)
             else:
                 directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
             bar()
@@ -177,6 +182,9 @@ def check_wordpress(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         return True
 
     response = requests.get(f"{linked}wp-includes/", headers=headers, cookies=cookies)
@@ -186,6 +194,9 @@ def check_wordpress(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WordPress"}):
             return True
@@ -201,6 +212,9 @@ def check_woocommerce(link):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "WooCommerce"}):
             return True
@@ -216,6 +230,9 @@ def check_joomla(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
@@ -227,6 +244,9 @@ def check_joomla(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
@@ -238,6 +258,9 @@ def check_joomla(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
@@ -253,6 +276,9 @@ def check_drupal(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Drupal"}):
             return True
@@ -268,6 +294,9 @@ def check_shopify(link):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "Shopify"}):
             return True
@@ -283,6 +312,9 @@ def check_1c_bitrix(linked):
             print(response.text)
             print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
             print(response.cookies)
+        if args1.headers:
+            print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+            print(response.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         if soup.find("meta", {"name": "generator", "content": "1C-Bitrix"}):
             return True
@@ -525,6 +557,9 @@ def check_subdomains(dictionary_dir, link, headers, cookies):
                         print(response.text)
                         print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
                         print(response.cookies)
+                    if args1.headers:
+                        print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
+                        print(response.headers)
                 else:
                     directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
             except requests.exceptions.ConnectionError as e:
@@ -640,7 +675,7 @@ if __name__ == '__main__':
         insecure(detected_cms)
     if args1.api_enum:
         url = link
-        api_enumeration(url, api_key, temp, headers, cookies, args1.response)
+        api_enumeration(url, api_key, temp, headers, cookies, args1.response, args1.headers)
     if args1.crawler:
         url = link
-        web_crawler(url, api_key, temp, headers, cookies, args1.response)
+        web_crawler(url, api_key, temp, headers, cookies, args1.response, args1.headers)
