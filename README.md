@@ -85,13 +85,13 @@ virtualenv gptbuster_venv
 
 
 ```
-build 1.3.3
+build 1.3.5
 GPT-based web-dir fuzzer, crawler
 @wearetyomsmnv
 web fuzzing,crawling,enumerator for penetration testers with <3
 
 usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawler] [--output] [--cookies [COOKIES]] [--basic_auth [BASIC_AUTH]]
-               [--b64]
+               [--b64] [--response]
                link api_key temperature
 
 Основные параметры
@@ -113,6 +113,7 @@ options:
   --basic_auth [BASIC_AUTH]
                         Add auth data in Authentification(log:pass)
   --b64                 base64 for data in Authentification
+  --response            View responses for all requests
 
 ```
 
