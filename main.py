@@ -9,13 +9,16 @@ from termcolor import cprint
 from alive_progress import alive_bar
 from urllib.parse import urlsplit, urlunsplit
 import os
-import base64
+import http.client
+import io
+
 
 sys.path.append("sc")
 
 from sc.colors import Bcolors
 from sc.neurocrawler import web_crawler
 from sc.api_enum import api_enumeration
+from sc.version import ver_ger
 
 
 def signal_handler(sig, frame):
@@ -34,7 +37,6 @@ def print_banner():
 
 print_banner()
 
-print(Bcolors.HEADER + 'build 1.3.6')
 print(Bcolors.HEADER + 'GPT-based web-dir fuzzer, crawler')
 print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
@@ -51,11 +53,10 @@ commands.add_argument('--api_enum', action='store_true', help='Фаззинг п
 commands.add_argument('--crawler', action='store_true', help='Black-box crawler')
 commands.add_argument('--output', action='store_true', default=False, help='.txt output')
 commands.add_argument('--cookies', nargs='?', type=str,  default=False, help='Add self cookies for request')
-commands.add_argument('--basic_auth', nargs='?', type=str,  default=False, help='Add auth data in Authentification(log:pass)')
-commands.add_argument('--b64', action='store_true', default=False, help='base64 for data in Authentification')
 commands.add_argument('--response', action='store_true', default=False, help='View responses for all requests')
 commands.add_argument('--headers', action='store_true', default=False, help='View headers for all requests')
-
+commands.add_argument('--head', action='store_true', default=False, help='Add custom headers in request head')
+commands.add_argument('--r', nargs='?', type=str,  default=False, help='Add your request file')
 
 args1 = commands.parse_args()
 
@@ -69,10 +70,10 @@ crawler = args1.crawler
 output = args1.output
 temp = args1.temperature
 cookies = args1.cookies
-basic_auth = args1.basic_auth
-b64 = args1.b64
 responses = args1.response
 headeers = args1.headers
+head = args1.head
+requ = args1.r
 
 if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
@@ -80,12 +81,18 @@ if not any([link, api_key, temp]):
     sys.exit(0)
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler, output, cookies, basic_auth, b64, responses, headeers]):
+            api_enumeration, crawler, output, cookies, responses, headeers, head, requ]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit(0)
 
 openai.api_key = api_key
+
+
+version = ver_ger(openai.api_key)
+
+print(Bcolors.HEADER + version)
+
 
 if temp > 1.00:
     print(Bcolors.FAIL + "[-]: " + "Укажите температуру меньше. openai API не принимает значения больше чем 1.00")
@@ -99,21 +106,42 @@ detected_cms = ""
 detected_api = ""
 txtman = ""
 
-if b64:
-    if args1.basic_auth:
-        args1.basic_auth = base64.b64encode(args1.basic_auth)
-    else:
-        print("Вы не выбрали аргумент --basic_auth")
+
+cookies = {'Cookie': args1.cookies} if args1.cookies else {}
+
+headers = None
+
+
+if requ:
+    if head:
+        print("Вы не можете использовать request file с другими заголовками. Уберите флаг --head.")
         sys.exit(0)
+    else:
+        with open(args1.r, 'r') as f:
+            request_text = f.read()
+
+        request_bytes = bytes(request_text, encoding='utf-8')
+        request_io = io.BytesIO(request_bytes)
+
+        request_headers = http.client.parse_headers(request_io, _class=http.client.HTTPMessage)
+
+        headers = dict(request_headers.items())
 
 
-cookies = {'Cookie': args1.cookies,
-            'User-agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'
-           } if args1.cookies else {}
-headers = {'Authorization': args1.basic_auth,
-           'User-agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36'} if args1.basic_auth else {}
+if head:
+    print("Add custom http headers in request.")
+    while True:
+        header = input("Enter header in format {name}:{value} or type 'done' to stop: ")
+        if header.lower() == 'done':
+            break
+        elif ':' in header:
+            name, value = header.split(':', maxsplit=1)
+            headers[name.strip()] = value.strip()
+        else:
+            print("Invalid header format. Please try again.")
+            headers = {}
 
-
+    
 def check_files(dictionary_dir, link, headers, cookies):
     directories = []
     print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
@@ -149,6 +177,7 @@ def gpt(cms):
     response = openai.Completion.create(
         engine="text-davinci-002",
         prompt=(
+
             f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
         ),
         temperature=temp,
@@ -594,7 +623,6 @@ def subdomains():
 
         desc = "Этот список будет использоваться для поиска субдоменов на сайте."
         response = openai.Completion.create(
-            engine="text-davinci-002",
             prompt=(
                 f"{desc}{paramet}.Просто выведи список субдоменов без своих пояснений.\n"
             ),
