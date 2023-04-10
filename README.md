@@ -12,6 +12,8 @@ gptbuster - призван решить проблему, когда не име
 
 [![image-2.jpg](https://i.postimg.cc/W4jWtC7T/image-2.jpg)](https://postimg.cc/TK7q4kS4)
 
+
+
 # Usage
 
 ```
@@ -85,35 +87,35 @@ virtualenv gptbuster_venv
 
 
 ```
-build 1.3.5
 GPT-based web-dir fuzzer, crawler
 @wearetyomsmnv
 web fuzzing,crawling,enumerator for penetration testers with <3
 
-usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawler] [--output] [--cookies [COOKIES]] [--basic_auth [BASIC_AUTH]]
-               [--b64] [--response]
+usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawler] [--output] [--cookies [COOKIES]] [--response] [--headers] [--head]
+               [--r [R]]
                link api_key temperature
 
 Основные параметры
 
 positional arguments:
-  link                  Укажите ссылку на веб-ресурс
-  api_key               Укажите api-key для chat-gpt
-  temperature           Укажите температуру для параметров [от 0.00 до 1.00]
+  link                 Укажите ссылку на веб-ресурс
+  api_key              Укажите api-key для chat-gpt
+  temperature          Укажите температуру для параметров [от 0.00 до 1.00]
 
 options:
-  -h, --help            show this help message and exit
-  --insecure            Поиск небезопасных директорий
-  --backup              Поиск бекапов
-  --subdomains          Перечисление субдоменов
-  --api_enum            Фаззинг по апи
-  --crawler             Black-box crawler
-  --output              .txt output
-  --cookies [COOKIES]   Add self cookies for request
-  --basic_auth [BASIC_AUTH]
-                        Add auth data in Authentification(log:pass)
-  --b64                 base64 for data in Authentification
-  --response            View responses for all requests
+  -h, --help           show this help message and exit
+  --insecure           Поиск небезопасных директорий
+  --backup             Поиск бекапов
+  --subdomains         Перечисление субдоменов
+  --api_enum           Фаззинг по апи
+  --crawler            Black-box crawler
+  --output             .txt output
+  --cookies [COOKIES]  Add self cookies for request
+  --response           View responses for all requests
+  --headers            View headers for all requests
+  --head               Add custom headers in request head
+  --r [R]              Add your request file
+
 
 ```
 
