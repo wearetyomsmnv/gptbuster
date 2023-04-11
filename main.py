@@ -57,6 +57,9 @@ commands.add_argument('--response', action='store_true', default=False, help='Vi
 commands.add_argument('--headers', action='store_true', default=False, help='View headers for all requests')
 commands.add_argument('--head', action='store_true', default=False, help='Add custom headers in request head')
 commands.add_argument('--r', nargs='?', type=str,  default=False, help='Add your request file')
+commands.add_argument('--x', nargs='?', type=str,  default=False, help='Change default http method (get, post, put, delete)')
+commands.add_argument('--proxy', action='store_true', default=False, help='Use proxy for requests')
+
 
 args1 = commands.parse_args()
 
@@ -74,6 +77,8 @@ responses = args1.response
 headeers = args1.headers
 head = args1.head
 requ = args1.r
+method_req = args1.x
+proxy = args1.proxy
 
 if not any([link, api_key, temp]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
@@ -81,7 +86,7 @@ if not any([link, api_key, temp]):
     sys.exit(0)
 
 if not any([insecure, backups, subdomains,
-            api_enumeration, crawler, output, cookies, responses, headeers, head, requ]):
+            api_enumeration, crawler, output, cookies, responses, headeers, head, requ, method_req, proxy]):
     print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
     print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
     sys.exit(0)
@@ -93,6 +98,17 @@ version = ver_ger(openai.api_key)
 
 print(Bcolors.HEADER + version)
 
+
+if proxy:
+    print("Укажите прокси.")
+    protocol = input(str("Укажите протокол[http, https]:"))
+    if protocol not in ("http", "https"):
+        print("Указан неверный протокол для прокси")
+        sys.exit(0)
+    prox = input(str("Укажите proxy (ex: 'http://proxy_host:proxy_port')"))
+    proxies = {protocol: prox}
+else:
+    proxies = None
 
 if temp > 1.00:
     print(Bcolors.FAIL + "[-]: " + "Укажите температуру меньше. openai API не принимает значения больше чем 1.00")
@@ -110,6 +126,21 @@ txtman = ""
 cookies = {'Cookie': args1.cookies} if args1.cookies else {}
 
 headers = None
+
+if args1.x:
+    if args1.x.lower() == "get":
+        method = "get"
+    elif args1.x.lower() == "post":
+        method = "post"
+    elif args1.x.lower() == "put":
+        method = "put"
+    elif args1.x.lower() == "delete":
+        method = "delete"
+    else:
+        print("Вы указали несуществующий http-метод (--x GET,POST,PUT or DELETE)")
+        sys.exit(0)
+else:
+    method = "get"
 
 
 if requ:
@@ -148,7 +179,7 @@ def check_files(dictionary_dir, link, headers, cookies):
     with alive_bar(len(dictionary_dir)) as bar:
         for key, directory in dictionary_dir.items():
             url = f"{link.lstrip('/')}{directory}"
-            response = requests.get(url, headers=headers, cookies=cookies)
+            response = requests.request(method, url, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
             if response.status_code == 200:
                 directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
                 if args1.response:
@@ -204,7 +235,7 @@ for result in results:
 
 
 def check_wordpress(linked):
-    response = requests.get(f"{linked}wp-login.php", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}wp-login.php", headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -216,7 +247,7 @@ def check_wordpress(linked):
             print(response.headers)
         return True
 
-    response = requests.get(f"{linked}wp-includes/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}wp-includes/", headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -234,7 +265,7 @@ def check_wordpress(linked):
 
 
 def check_woocommerce(link):
-    response = requests.get(link, headers=headers, cookies=cookies)
+    response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -252,7 +283,7 @@ def check_woocommerce(link):
 
 
 def check_joomla(linked):
-    response = requests.get(f"{linked}administrator/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}administrator/", headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -266,7 +297,7 @@ def check_joomla(linked):
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
-    response = requests.get(f"{linked}templates/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}templates/", headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -280,7 +311,7 @@ def check_joomla(linked):
         if soup.find("meta", {"name": "generator", "content": "Joomla!"}):
             return True
 
-    response = requests.get(f"{linked}components/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}components/", headers=headers, cookies=cookies, timeout=5)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -298,7 +329,7 @@ def check_joomla(linked):
 
 
 def check_drupal(linked):
-    response = requests.get(f"{linked}modules/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}modules/", headers=headers, cookies=cookies, timeout=5)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -316,7 +347,7 @@ def check_drupal(linked):
 
 
 def check_shopify(link):
-    response = requests.get(link, headers=headers, cookies=cookies)
+    response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -334,7 +365,7 @@ def check_shopify(link):
 
 
 def check_1c_bitrix(linked):
-    response = requests.get(f"{linked}bitrix/", headers=headers, cookies=cookies)
+    response = requests.request(method, f"{linked}bitrix/", headers=headers, cookies=cookies, timeout=5)
     if response.status_code == 200:
         if args1.response:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -352,7 +383,7 @@ def check_1c_bitrix(linked):
 
 
 def detect_cms(link, headers, cookies):
-    response = requests.get(link, headers=headers, cookies=cookies)
+    response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5)
     soup = BeautifulSoup(response.text, "html.parser")
 
     if soup.find("meta", {"name": "generator", "content": "WordPress"}) or \
@@ -443,7 +474,7 @@ def insecure(detected_cms):
         print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
         if last_insecure_files is None:
-            paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов: "))
+            paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов или напишите 'default': "))
             insecure_files = gpt_insecure(detected_cms, paramet)
         else:
             print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
@@ -578,7 +609,7 @@ def check_subdomains(dictionary_dir, link, headers, cookies):
         for key, subdom in dictionary_dir.items():
             url = urlunsplit(('https', f"{subdom}.{urlsplit(link).hostname}", '', '', ''))
             try:
-                response = requests.get(url, headers=headers, cookies=cookies)
+                response = requests.request(method,url, headers=headers, cookies=cookies, timeout=5)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
                     if args1.response:
@@ -703,7 +734,7 @@ if __name__ == '__main__':
         insecure(detected_cms)
     if args1.api_enum:
         url = link
-        api_enumeration(url, api_key, temp, headers, cookies, args1.response, args1.headers)
+        api_enumeration(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies)
     if args1.crawler:
         url = link
-        web_crawler(url, api_key, temp, headers, cookies, args1.response, args1.headers)
+        web_crawler(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies)
