@@ -7,10 +7,7 @@ Webdir fuzzer based on ChatGPT
 gptbuster is designed to solve the problem when we do not have a dictionary - we need to look up directories, files or parameters on a site. The special feature is that gptbuster works with chatgpt and any user can create a dictionary of any complexity as quickly as possible. Whether it's multi-level, masked or parameterized or both, so that with partial or no data about what might be on the site, it is possible to list it for further development in a pentest. 
 
 
-[![1.png](https://i.postimg.cc/fT3QVTpN/1.png)](https://postimg.cc/8jV03DTK)
-
-
-[![image-2.jpg](https://i.postimg.cc/W4jWtC7T/image-2.jpg)](https://postimg.cc/TK7q4kS4)
+[![1.png](https://i.postimg.cc/TYcLXMLV/1.png)](https://postimg.cc/F77sj6xz)
 
 
 
