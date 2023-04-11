@@ -95,19 +95,19 @@ usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawl
                [--response] [--headers] [--head] [--r [R]] [--x [X]] [--proxy]
                link api_key temperature
 
-Основные параметры
+Basic parameters
 
 positional arguments:
-  link                 Укажите ссылку на веб-ресурс
-  api_key              Укажите api-key для chat-gpt
-  temperature          Укажите температуру для параметров [от 0.00 до 1.00]
+  link                 Provide a link to a web resource
+  api_key              Specify the api-key for chat-gpt
+  temperature          Specify the temperature for parameters [0.00 to 1.00]
 
 options:
   -h, --help           show this help message and exit
-  --insecure           Поиск небезопасных директорий
-  --backup             Поиск бекапов
-  --subdomains         Перечисление субдоменов
-  --api_enum           Фаззинг по апи
+  --insecure           Search for unsafe directories
+  --backup             Searching for backups
+  --subdomains         Listing of subdomains
+  --api_enum           Fuzzing by api
   --crawler            Black-box crawler
   --output             .txt output
   --cookies [COOKIES]  Add self cookies for request
@@ -117,6 +117,7 @@ options:
   --r [R]              Add your request file
   --x [X]              Change default http method (get, post, put, delete)
   --proxy              Use proxy for requests
+
 
 ```
 
