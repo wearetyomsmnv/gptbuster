@@ -2,9 +2,9 @@
 Webdir fuzzer based on ChatGPT
 
 
-# Зачем вообще gptbuster ?
+# Why gptbuster is needed ?
 
-gptbuster - призван решить проблему, когда не имея словаря - нам нужно просмотреть директории, файлы или параметры на сайте. Особенность в том, что gptbuster работает с chatgpt и любой пользователь может максимально быстро создать словарь любой сложности. Будь то многоуровневый, по маске или с параметрами или всё вместе для того чтобы имея частичные данные о том, что может быть на сайте вообще или вовсе не располагая данными - можно было провести перечисление для дальнейшего развития при пентесте. 
+gptbuster is designed to solve the problem when we do not have a dictionary - we need to look up directories, files or parameters on a site. The special feature is that gptbuster works with chatgpt and any user can create a dictionary of any complexity as quickly as possible. Whether it's multi-level, masked or parameterized or both, so that with partial or no data about what might be on the site, it is possible to list it for further development in a pentest. 
 
 
 [![1.png](https://i.postimg.cc/fT3QVTpN/1.png)](https://postimg.cc/8jV03DTK)
@@ -44,24 +44,24 @@ example: sudo docker run -it <image_name> https://google.com/ sk*********** 0.12
 
 # python venv
 
-Переходим в папку с проектом
+Go to the project folder
 ```
 cd gptbuster
 ```
 
-Создаём виртуальное окружение
+Creating a virtual environment
 ```
 python3 -m venv gptbuster_venv
 ```
 
-или
+or
 
 ```
 virtualenv gptbuster_venv
 ```
 
 
-После чего нам необходимо активировать виртуальное окружение
+We then need to activate the virtual environment
 
 ### Linux:
 ```
@@ -75,7 +75,7 @@ virtualenv gptbuster_venv
 ```
 
 
-И устанавливаем в него зависимости
+And put dependencies into it
 
 ```
  pip3 install -r requirements.txt
@@ -95,19 +95,19 @@ usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawl
                [--response] [--headers] [--head] [--r [R]] [--x [X]] [--proxy]
                link api_key temperature
 
-Основные параметры
+Basic parameters
 
 positional arguments:
-  link                 Укажите ссылку на веб-ресурс
-  api_key              Укажите api-key для chat-gpt
-  temperature          Укажите температуру для параметров [от 0.00 до 1.00]
+  link                 Provide a link to a web resource
+  api_key              Specify the api-key for chat-gpt
+  temperature          Specify the temperature for parameters [0.00 to 1.00]
 
 options:
   -h, --help           show this help message and exit
-  --insecure           Поиск небезопасных директорий
-  --backup             Поиск бекапов
-  --subdomains         Перечисление субдоменов
-  --api_enum           Фаззинг по апи
+  --insecure           Search for unsafe directories
+  --backup             Searching for backups
+  --subdomains         Listing of subdomains
+  --api_enum           Fuzzing by api
   --crawler            Black-box crawler
   --output             .txt output
   --cookies [COOKIES]  Add self cookies for request
@@ -118,12 +118,13 @@ options:
   --x [X]              Change default http method (get, post, put, delete)
   --proxy              Use proxy for requests
 
+
 ```
 
 # PS
 
-Наслаждайся. В скором времени будут добавлены крутые фичи! :joy:
+Enjoy. Cool features will be added soon! :joy:
 
-# Проблемы с которыми можно столкнуться.
+# Problems you may encounter.
 
-GPT - это генеративная нейросеть и порой данные, которые получаем мы при запросе - имеют много мусора и неточностей. Это приводит к фактору непредсказуемости при использовании данных. Возможно со временем удастся изобрести универсальный промпт
+GPT is a generative neural network and sometimes the data we receive when we query it has a lot of rubbish and inaccuracies. This leads to the unpredictability factor when using the data. Perhaps in time a universal prompt can be invented.
