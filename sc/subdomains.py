@@ -115,6 +115,9 @@ def subdomain(url, api_key, temp, head, cookies, responses, method, proxies, txt
 
         results = check_subdomains(subdomains_dict, url, head, cookies, responses, method, proxies)
 
+        for result in results:
+            print(result)
+
         if txtman:
             name = input(str("Enter a name for the file: "))
             with open(f"{name}.txt", "w") as f:

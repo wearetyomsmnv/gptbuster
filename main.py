@@ -430,15 +430,15 @@ def insecure(detected_cms):
 
         if paramet == "":
             print(
-                Bcolors.OKCYAN + '[+]: ' + f"Enter your parameter to generate the {detected_cms} dictionary via chatgpt or write 'default': ")
+                Bcolors.OKCYAN + '[+]: ' + f"Enter your parameter to generate the {cms} dictionary via chatgpt or write 'default': ")
         else:
-            print(Bcolors.OKCYAN + f'[+]: The specified parameter is used: {paramet}')
+            print(Bcolors.OKCYAN + f'[+]: The specified parameter is used: {cms}')
 
         print(
             Bcolors.OKCYAN + '[TYPE]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
 
         if paramet == "default":
-            paramet = f"Please generate a big list of insecure directories and parameters for {detected_cms} that you know.Just display the list of directories without your explanations.\n"
+            paramet = f"Please generate a big list of insecure directories and parameters for {cms} that you know.Just display the list of directories without your explanations.\n"
         elif paramet == "":
             paramet = input(str("param: "))
 
@@ -531,7 +531,7 @@ def backups(detected_cms):
         print(
             Bcolors.OKCYAN + '[TYPE]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
         if paramet == "default":
-            paramet = f"Please generate a big list of files that can be backups for {detected_cms} that you know.\n"
+            paramet = f"Please generate a big list of files that can be backups for {cms} that you know.\n"
         elif paramet == "":
             paramet = input(str("param: "))
         desc = "This list will be used to search for backups on the website."
@@ -602,20 +602,34 @@ def backups(detected_cms):
             break
 
 
+
 if __name__ == '__main__':
     if args1.output:
         txtman = True
+
+    threads = []
+
     if args1.backup:
-        backups(detected_cms)
+        backup_thread = threading.Thread(target=backups, args=(detected_cms,))
+        threads.append(backup_thread)
     if args1.subdomains:
-        t1 = threading.Thread(target=subdomain, args=(link, api_key, temp, headers, cookies, args1.response, method, proxies, txtman))
-        t1.start()
+        url = link
+        subdomains_thread = threading.Thread(target=subdomain, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies, txtman))
+        threads.append(subdomains_thread)
     if args1.insecure:
-        t2 = threading.Thread(target=insecure, args=(detected_cms, headers, cookies, args1.response, args1.headers, method, proxies))
-        t2.start()
+        insecure_thread = threading.Thread(target=insecure, args=(detected_cms,))
+        threads.append(insecure_thread)
     if args1.api_enum:
-        t3 = threading.Thread(target=api_enumeration, args=(link, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
-        t3.start()
+        url = link
+        api_enumeration_thread = threading.Thread(target=api_enumeration, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+        threads.append(api_enumeration_thread)
     if args1.crawler:
-        t4 = threading.Thread(target=web_crawler, args=(link, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
-        t4.start()
+        url = link
+        web_crawler_thread = threading.Thread(target=web_crawler, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+        threads.append(web_crawler_thread)
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
