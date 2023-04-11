@@ -91,8 +91,8 @@ GPT-based web-dir fuzzer, crawler
 @wearetyomsmnv
 web fuzzing,crawling,enumerator for penetration testers with <3
 
-usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawler] [--output] [--cookies [COOKIES]] [--response] [--headers] [--head]
-               [--r [R]]
+usage: main.py [-h] [--insecure] [--backup] [--subdomains] [--api_enum] [--crawler] [--output] [--cookies [COOKIES]]
+               [--response] [--headers] [--head] [--r [R]] [--x [X]] [--proxy]
                link api_key temperature
 
 Основные параметры
@@ -115,7 +115,8 @@ options:
   --headers            View headers for all requests
   --head               Add custom headers in request head
   --r [R]              Add your request file
-
+  --x [X]              Change default http method (get, post, put, delete)
+  --proxy              Use proxy for requests
 
 ```
 
