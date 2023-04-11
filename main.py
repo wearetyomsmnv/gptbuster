@@ -7,11 +7,11 @@ from bs4 import BeautifulSoup
 import sys
 from termcolor import cprint
 from alive_progress import alive_bar
-from urllib.parse import urlsplit, urlunsplit
+
 import os
 import http.client
 import io
-
+import threading
 
 sys.path.append("sc")
 
@@ -19,10 +19,10 @@ from sc.colors import Bcolors
 from sc.neurocrawler import web_crawler
 from sc.api_enum import api_enumeration
 from sc.version import ver_ger
-
+from sc.subdomains import subdomain
 
 def signal_handler(sig, frame):
-    print("\nПрограмма завершена пользователем.")
+    print("\nThe programm is terminated by the user.")
     sys.exit(0)
 
 
@@ -42,14 +42,14 @@ print(Bcolors.HEADER + '@wearetyomsmnv')
 print(Bcolors.OKGREEN + 'web fuzzing,crawling,enumerator for penetration testers with <3')
 
 print(Bcolors.BOLD)
-commands = argparse.ArgumentParser(description='Основные параметры')
-commands.add_argument('link', help='Укажите ссылку на веб-ресурс')
-commands.add_argument('api_key', help='Укажите api-key для chat-gpt')
-commands.add_argument('temperature', type=float, help='Укажите температуру для параметров [от 0.00 до 1.00]')
-commands.add_argument('--insecure', action='store_true', help='Поиск небезопасных директорий')
-commands.add_argument('--backup', action='store_true', help='Поиск бекапов')
-commands.add_argument('--subdomains', action='store_true', help='Перечисление субдоменов')
-commands.add_argument('--api_enum', action='store_true', help='Фаззинг по апи')
+commands = argparse.ArgumentParser(description='Basic parameters')
+commands.add_argument('link', help='Provide a link to a web resource')
+commands.add_argument('api_key', help='Specify the api-key for chat-gpt')
+commands.add_argument('temperature', type=float, help='Specify the temperature for parameters [0.00 to 1.00]')
+commands.add_argument('--insecure', action='store_true', help='Search for unsafe directories')
+commands.add_argument('--backup', action='store_true', help='Searching for backups')
+commands.add_argument('--subdomains', action='store_true', help='Listing of subdomains')
+commands.add_argument('--api_enum', action='store_true', help='Fuzzing by api')
 commands.add_argument('--crawler', action='store_true', help='Black-box crawler')
 commands.add_argument('--output', action='store_true', default=False, help='.txt output')
 commands.add_argument('--cookies', nargs='?', type=str,  default=False, help='Add self cookies for request')
@@ -81,14 +81,14 @@ method_req = args1.x
 proxy = args1.proxy
 
 if not any([link, api_key, temp]):
-    print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали основные аргументы')
-    print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
+    print(Bcolors.FAIL + "[FAIL:] " + 'You have not specified the main arguments')
+    print(Bcolors.FAIL + "[NOTE:] " + 'Try again')
     sys.exit(0)
 
 if not any([insecure, backups, subdomains,
             api_enumeration, crawler, output, cookies, responses, headeers, head, requ, method_req, proxy]):
-    print(Bcolors.FAIL + "[FAIL:] " + 'Вы не указали дополнительные аргументы')
-    print(Bcolors.FAIL + "[NOTE:] " + 'Попробуйте ещё раз')
+    print(Bcolors.FAIL + "[FAIL:] " + 'You have not specified additional arguments')
+    print(Bcolors.FAIL + "[NOTE:] " + 'Try again')
     sys.exit(0)
 
 openai.api_key = api_key
@@ -100,21 +100,21 @@ print(Bcolors.HEADER + version)
 
 
 if proxy:
-    print("Укажите прокси.")
-    protocol = input(str("Укажите протокол[http, https]:"))
+    print("Proxy")
+    protocol = input(str("Specify a protocol[http, https]:"))
     if protocol not in ("http", "https"):
-        print("Указан неверный протокол для прокси")
+        print("Incorrect protocol for the proxy is specified")
         sys.exit(0)
-    prox = input(str("Укажите proxy (ex: 'http://proxy_host:proxy_port')"))
+    prox = input(str("Specify a proxy (ex: 'http://proxy_host:proxy_port')"))
     proxies = {protocol: prox}
 else:
     proxies = None
 
 if temp > 1.00:
-    print(Bcolors.FAIL + "[-]: " + "Укажите температуру меньше. openai API не принимает значения больше чем 1.00")
+    print(Bcolors.FAIL + "[-]: " + "Specify a lower temperature. Openai API does not accept values greater than 1.00")
     sys.exit(0)
 else:
-    print(Bcolors.OKGREEN + f"Температура: {temp}.")
+    print(Bcolors.OKGREEN + f"Tempereature is: {temp}.")
 
 directories_dict = {}
 directories_dict2 = {}
@@ -137,7 +137,7 @@ if args1.x:
     elif args1.x.lower() == "delete":
         method = "delete"
     else:
-        print("Вы указали несуществующий http-метод (--x GET,POST,PUT or DELETE)")
+        print("You have specified a non-existent http method (--x GET,POST,PUT or DELETE)")
         sys.exit(0)
 else:
     method = "get"
@@ -145,7 +145,7 @@ else:
 
 if requ:
     if head:
-        print("Вы не можете использовать request file с другими заголовками. Уберите флаг --head.")
+        print("You cannot use the request file with other headers. Remove --head flag.")
         sys.exit(0)
     else:
         with open(args1.r, 'r') as f:
@@ -175,7 +175,7 @@ if head:
     
 def check_files(dictionary_dir, link, headers, cookies):
     directories = []
-    print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
+    print(Bcolors.OKCYAN + "[+]: " + "TESTING IS GOING ON")
     with alive_bar(len(dictionary_dir)) as bar:
         for key, directory in dictionary_dir.items():
             url = f"{link.lstrip('/')}{directory}"
@@ -198,10 +198,10 @@ def check_files(dictionary_dir, link, headers, cookies):
 
 def gpt(cms):
     print(
-        Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря через chatgpt или напишите 'default': ")
+        Bcolors.OKCYAN + '[+]: ' + "Enter your parameter to generate the dictionary via chatgpt or write 'default':")
     parametr = input(str("param: "))
     if parametr == "default":
-        paramet = f"Сгенерируй пожалуйста большой список директорий и файлов {cms}, которые ты знаешь.\n"
+        paramet = f"Please generate a large list of {cms} directories and files that you know.\n"
     else:
         paramet = parametr
 
@@ -209,7 +209,7 @@ def gpt(cms):
         engine="text-davinci-002",
         prompt=(
 
-            f"{paramet}.Просто выведи список директорий без своих пояснений.\n"
+            f"{paramet}.Just display the list of directories without your explanations.\n"
         ),
         temperature=temp,
         max_tokens=2048,
@@ -224,7 +224,7 @@ def gpt(cms):
     result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in enumerate(status)
                    if item.strip()}
 
-    print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
+    print(Bcolors.OKCYAN + "[+]: " + "THE DICTIONARY IS READY")
 
     return result_dict
 
@@ -414,7 +414,7 @@ def detect_cms(link, headers, cookies):
         return "1C-Bitrix"
 
     else:
-        return Bcolors.FAIL + "Не определено"
+        return Bcolors.FAIL + "Not defined"
 
 
 detected_cms = detect_cms(link, headers, cookies)
@@ -430,24 +430,24 @@ def insecure(detected_cms):
 
         if paramet == "":
             print(
-                Bcolors.OKCYAN + '[+]: ' + f"Введите свой параметр для генерации словаря {cms} через chatgpt или напишите 'default': ")
+                Bcolors.OKCYAN + '[+]: ' + f"Enter your parameter to generate the {detected_cms} dictionary via chatgpt or write 'default': ")
         else:
-            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
+            print(Bcolors.OKCYAN + f'[+]: The specified parameter is used: {paramet}')
 
         print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
 
         if paramet == "default":
-            paramet = f"Сгенерируй пожалуйста большой список небезопасных директорий и параметров для {cms}, которые ты знаешь.Просто выведи список директорий без своих пояснений.\n"
+            paramet = f"Please generate a big list of insecure directories and parameters for {detected_cms} that you know.Just display the list of directories without your explanations.\n"
         elif paramet == "":
             paramet = input(str("param: "))
 
-        desc = "Этот список будет использоваться для поиска небезопасных директорий и параметров"
+        desc = "This list will be used to look for unsafe directories and parameters"
 
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{desc}{paramet}.Просто выведи список директорий без своих пояснений.\n"
+                f"{desc}{paramet}.Just display the list of directories without your explanations.\n"
             ),
             temperature=temp,
             max_tokens=2048,
@@ -462,7 +462,7 @@ def insecure(detected_cms):
         result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in
                        enumerate(status) if item.strip()}
 
-        print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
+        print(Bcolors.OKCYAN + "[+]: " + "THE DICTIONARY IS READY")
 
         return result_dict
 
@@ -474,19 +474,19 @@ def insecure(detected_cms):
         print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
         if last_insecure_files is None:
-            paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов или напишите 'default': "))
+            paramet = input(str("[+] Enter your parameter to generate a list of unsafe files or write 'default':"))
             insecure_files = gpt_insecure(detected_cms, paramet)
         else:
-            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
-            choice = input(str("Ответ: "))
+            print(Bcolors.OKCYAN + '[+]: ' + "Do you want to continue with the previous request? [yes/new]")
+            choice = input(str("Answer: "))
             if choice.lower() == "yes":
                 insecure_files = last_insecure_files
                 paramet = input(
-                    str("[+] Введите свой параметр для генерации списка небезопасных файлов (оставьте пустым для использования предыдущего запроса): "))
+                    str("[+] Enter your parameter to generate a list of unsafe files (leave blank to use the previous prompt):"))
                 if paramet == "":
                     paramet = last_paramet
             else:
-                paramet = input(str("[+] Введите свой параметр для генерации списка небезопасных файлов: "))
+                paramet = input(str("[+] Enter your parameter to generate a list of unsafe files:"))
                 insecure_files = gpt_insecure(detected_cms, paramet)
 
         last_insecure_files = insecure_files
@@ -498,7 +498,7 @@ def insecure(detected_cms):
 
         results_insecure = check_files(insecure_files, link, headers, cookies)
         if txtman:
-            name = input(str("Введите имя для файла: "))
+            name = input(str("Enter a name for the file:"))
             with open(f"{name}.txt", "w") as f:
                 for result in results_insecure:
                     f.write(result)
@@ -508,8 +508,8 @@ def insecure(detected_cms):
             for result in results_insecure:
                 print(result)
 
-        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
-        usl = input(str("Ответ: "))
+        print(Bcolors.OKCYAN + "[?]: " + "TRY AGAIN? [Yes/no]")
+        usl = input(str("Answer: "))
         if usl.lower() == "yes":
             continue
         else:
@@ -524,22 +524,22 @@ def backups(detected_cms):
     def gpt_backups(cms, paramet=""):
         if paramet == "":
             print(
-                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации списка файлов бэкапов через chatgpt или напишите 'default': ")
+                Bcolors.OKCYAN + '[+]: ' + "Enter your parameter to generate a list of backup files via chatgpt or write 'default': ")
         else:
-            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
+            print(Bcolors.OKCYAN + f'[+]: The specified parameter is used: {paramet}')
 
         print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
         if paramet == "default":
-            paramet = f"Сгенерируй пожалуйста большой список файлов, которые могут являться бэкапами для {cms}, которые ты знаешь.\n"
+            paramet = f"Please generate a big list of files that can be backups for {detected_cms} that you know.\n"
         elif paramet == "":
             paramet = input(str("param: "))
-        desc = "Этот список будет использоваться для поиска бэкапов на сайте."
+        desc = "This list will be used to search for backups on the website."
 
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{desc}{paramet}.Просто выведи список бэкап файлов и директорий без своих пояснений.\n"
+                f"{desc}{paramet}.Just display a list of backup files and directories without your explanations.\n"
             ),
             temperature=temp,
             max_tokens=2048,
@@ -554,7 +554,7 @@ def backups(detected_cms):
         result_dict = {i: '/'.join([s.strip() for s in item.split('/')]).replace('//', '/') for i, item in
                        enumerate(status) if item.strip()}
 
-        print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ГОТОВ")
+        print(Bcolors.OKCYAN + "[+]: " + "THE DICTIONARY IS READY")
 
         return result_dict
 
@@ -563,19 +563,19 @@ def backups(detected_cms):
 
     while reg:
         if last_backups is None:
-            paramet = input(str("[+] Введите свой параметр для генерации списка файлов бэкапов: "))
+            paramet = input(str("[+] Enter your parameter to generate a list of backup files:"))
             backups_files = gpt_backups(detected_cms, paramet)
         else:
-            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
-            choice = input(str("Ответ: "))
+            print(Bcolors.OKCYAN + '[+]: ' + "Do you want to continue with the previous request? [yes/new]")
+            choice = input(str("Answer: "))
             if choice.lower() == "yes":
                 backups_files = last_backups
                 paramet = input(
-                    str("[+] Введите свой параметр для генерации списка файлов бэкапов (оставьте пустым для использования предыдущего запроса): "))
+                    str("[+] Enter your parameter to generate a list of backup files (leave blank to use the previous query): "))
                 if paramet == "":
                     paramet = last_paramet
             else:
-                paramet = input(str("[+] Введите свой параметр для генерации списка файлов бэкапов: "))
+                paramet = input(str("[+] Enter your parameter to generate a list of backup files: "))
                 backups_files = gpt_backups(detected_cms, paramet)
 
         last_backups = backups_files
@@ -584,7 +584,7 @@ def backups(detected_cms):
         results_backups = check_files(backups_files, link, headers, cookies)
 
         if txtman:
-            name = input(str("Введите имя для файла: "))
+            name = input(str("Enter a name for the file: "))
             with open(f"{name}.txt", "w") as f:
                 for result in results_backups:
                     f.write(result)
@@ -594,133 +594,12 @@ def backups(detected_cms):
             for result in results_backups:
                 print(result)
 
-        print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
-        usl = input(str("Ответ: "))
+        print(Bcolors.OKCYAN + "[?]: " + "TRY NOW ?[Yes/no]")
+        usl = input(str("Answer: "))
         if usl.lower() == "yes":
             continue
         else:
             break
-
-
-def check_subdomains(dictionary_dir, link, headers, cookies):
-    directories = []
-    print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
-    with alive_bar(len(dictionary_dir)) as bar:
-        for key, subdom in dictionary_dir.items():
-            url = urlunsplit(('https', f"{subdom}.{urlsplit(link).hostname}", '', '', ''))
-            try:
-                response = requests.request(method,url, headers=headers, cookies=cookies, timeout=5)
-                if response.status_code == 200:
-                    directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
-                    if args1.response:
-                        print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
-                        print(response.text)
-                        print(Bcolors.OKCYAN + "[+]" + "[response]" + f"Cookies:\n")
-                        print(response.cookies)
-                    if args1.headers:
-                        print(Bcolors.OKCYAN + "[+]" + "[headers]: ")
-                        print(response.headers)
-                else:
-                    directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url}")
-            except requests.exceptions.ConnectionError as e:
-                directories.append(f"{Bcolors.FAIL}[-]{Bcolors.ENDC} {key}: {url} ({e})")
-            bar()
-    return directories
-
-
-def subdomains():
-    print(Bcolors.OKGREEN + "[+]: " + "CHECK SUBDOMAINS")
-
-    reg = True
-    last_subdomains = None
-    last_paramet = None
-
-    def gpt_subdomains(paramet=""):
-        nonlocal last_paramet
-
-        if paramet == "":
-            print(
-                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря субдоменов через chatgpt или напишите 'default': ")
-        else:
-            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
-
-        print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
-
-        if paramet == "default":
-            paramet = f"Сгенерируй пожалуйста большой список субдоменов для , которые ты знаешь.\n"
-        elif paramet == "":
-            paramet = input(str("param: "))
-
-        desc = "Этот список будет использоваться для поиска субдоменов на сайте."
-        response = openai.Completion.create(
-            prompt=(
-                f"{desc}{paramet}.Просто выведи список субдоменов без своих пояснений.\n"
-            ),
-            temperature=temp,
-            max_tokens=2048,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=["\n\n"],
-        )
-
-        status = response.choices[0].text.split('\n')
-
-        result_dict = {}
-        for i, item in enumerate(status):
-            if item.strip():
-                result_dict[i] = '/'.join([s.strip() for s in item.split('/')]).replace('//', '/')
-
-        print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ СУБДОМЕНОВ ГОТОВ")
-
-        last_paramet = paramet
-        return result_dict
-
-    while reg:
-        if last_subdomains is None:
-            subdomains_dict = gpt_subdomains()
-        else:
-            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
-            choice = input(str("Ответ: "))
-            if choice.lower() == "yes":
-                subdomains_dict = last_subdomains
-                paramet = input(
-                    str("[+] Введите свой параметр для генерации списка субдоменов (оставьте пустым для использования предыдущего запроса): "))
-                if paramet == "":
-                    paramet = last_paramet
-            else:
-                paramet = input(str("[+] Введите свой параметр для генерации списка субдоменов: "))
-                subdomains_dict = gpt_subdomains(paramet)
-
-        last_subdomains = subdomains_dict
-
-        results = check_subdomains(subdomains_dict, link, headers, cookies)
-
-        if txtman:
-            name = input(str("Введите имя для файла: "))
-            with open(f"{name}.txt", "w") as f:
-                for result in results:
-                    f.write(result)
-                f.close()
-                print(f"File name {name}.txt was created in {os.getcwd()} ")
-                if txtman:
-                    name = input(str("Введите имя для файла: "))
-                    with open(f"{name}.txt", "w") as f:
-                        for result in results:
-                            f.write(result)
-                        f.close()
-                        print(f"File name {name}.txt was created in {os.getcwd()} ")
-                else:
-                    for result in results:
-                        print(result)
-
-                print(Bcolors.OKCYAN + "[?]: " + "ПОПРОБОВАТЬ СНОВА ?[Yes/no]")
-                usl = input(str("Ответ: "))
-                if usl.lower() == "yes":
-                    continue
-                else:
-                    break
 
 
 if __name__ == '__main__':
@@ -729,12 +608,14 @@ if __name__ == '__main__':
     if args1.backup:
         backups(detected_cms)
     if args1.subdomains:
-        subdomains()
+        t1 = threading.Thread(target=subdomain, args=(link, api_key, temp, headers, cookies, args1.response, method, proxies, txtman))
+        t1.start()
     if args1.insecure:
-        insecure(detected_cms)
+        t2 = threading.Thread(target=insecure, args=(detected_cms, headers, cookies, args1.response, args1.headers, method, proxies))
+        t2.start()
     if args1.api_enum:
-        url = link
-        api_enumeration(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies)
+        t3 = threading.Thread(target=api_enumeration, args=(link, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+        t3.start()
     if args1.crawler:
-        url = link
-        web_crawler(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies)
+        t4 = threading.Thread(target=web_crawler, args=(link, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+        t4.start()

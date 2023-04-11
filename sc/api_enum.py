@@ -8,7 +8,7 @@ import sys
 
 
 def signal_handler(sig, frame):
-    print("\nПрограмма завершена пользователем.")
+    print("\nThe programm is terminated by the user.")
     sys.exit(0)
 
 
@@ -24,11 +24,11 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
 
     def check_api(dictionary_dir, link, headers, cookies, responses, headeers, method, proxies):
         directories = []
-        print(Bcolors.OKCYAN + "[+]: " + "ИДЁТ ПРОВЕРКА")
+        print(Bcolors.OKCYAN + "[+]: " + "TESTING IS GOING ON")
         with alive_bar(len(dictionary_dir)) as bar:
             for key, directory in dictionary_dir.items():
                 url = f"{link.lstrip('/')}{directory}"
-                response = requests.request(method,url, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
+                response = requests.request(method, url, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
                 if response.status_code == 200:
                     directories.append(f"{Bcolors.OKGREEN}[+]{Bcolors.ENDC} {key}: {url}")
                     if responses:
@@ -51,9 +51,9 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
         if check_soap_api(f"{link}index.php?wsdl", headers, cookies, responses, headeers, method, proxies):
             return "SOAP API"
         else:
-            return Bcolors.FAIL + "Не определено"
+            return Bcolors.FAIL + "Not defined"
 
-    def check_graphql_api(link, headers, cookies, responses,headeers):
+    def check_graphql_api(link, headers, cookies, responses, headeers):
         response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
         if responses:
             print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -69,7 +69,7 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
         return False
 
     def check_soap_api(url, headers, cookies, responses, headeers, method, proxies):
-        response = requests.request(method,url, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
+        response = requests.request(method, url, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
         if response.status_code == 200:
             if responses:
                 print(Bcolors.OKCYAN + "[+]" + "[response]" + "Http-code:\n")
@@ -88,22 +88,22 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
 
         if paramet == "":
             print(
-                Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+                Bcolors.OKCYAN + '[+]: ' + "Enter your parameter to generate the api dictionary via chatgpt or write 'default':")
         else:
-            print(Bcolors.OKCYAN + f'[+]: Используется заданный параметр: {paramet}')
+            print(Bcolors.OKCYAN + f'[+]: The specified parameter is used: {paramet}')
 
         print(
-            Bcolors.OKCYAN + '[TYPE]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+            Bcolors.OKCYAN + '[TYPE]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
         if paramet == "default":
-            paramet = f"Сгенерируй пожалуйста большой список директорий и файлов для API {api}, которые ты знаешь."
+            paramet = f"Please generate a large list of directories and files for the {api} API that you know."
         elif paramet == "":
             paramet = input(str("param: "))
-        desc = "Этот словарь будет использоваться для перечисления api"
+        desc = "This dictionary will be used to list the api"
 
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=(
-                f"{desc}{paramet}.Просто выведи список директорий и параметров без своих пояснений.\n"
+                f"{desc}{paramet}.Just output a list of directories and parameters without your explanations.\n"
             ),
             temperature=temp,
             max_tokens=2048,
@@ -119,7 +119,7 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
                        enumerate(status)
                        if item.strip()}
 
-        print(Bcolors.OKCYAN + "[+]: " + "СЛОВАРЬ ДЛЯ API ГОТОВ")
+        print(Bcolors.OKCYAN + "[+]: " + "THE VOCABULARY FOR THE API IS READY")
 
         return result_dict
 
@@ -131,18 +131,18 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
         print(Bcolors.OKGREEN + f"Detected API: {detected_api}")
 
         if last_directories is None:
-            paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+            paramet = input(str("[+] Enter your parameter to generate the api dictionary:"))
             directories_dict = gpt_api(detected_api, temp, paramet)
         else:
-            print(Bcolors.OKCYAN + '[+]: ' + "Хотите продолжить с предыдущим запросом? [yes/new]")
-            choice = input(str("Ответ: "))
+            print(Bcolors.OKCYAN + '[+]: ' + "Do you want to continue with the previous request?[yes/new]")
+            choice = input(str("Answer: "))
             if choice.lower() == "yes":
                 directories_dict = last_directories
-                paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+                paramet = input(str("[+] Enter your parameter to generate the api dictionary:"))
                 if paramet != "":
                     last_paramet = paramet
             else:
-                paramet = input(str("[+] Введите свой параметр для генерации словаря api: "))
+                paramet = input(str("[+] Enter your parameter to generate the api dictionary:"))
                 if paramet == "":
                     paramet = last_paramet
                 directories_dict = gpt_api(detected_api, temp, paramet)
@@ -152,8 +152,8 @@ def api_enumeration(link, api_key, temp, headers, cookies, responses, headeers, 
             print(result)
 
         last_directories = directories_dict
-        print(Bcolors.OKCYAN + "[?]: " + "Хотите попробовать снова? [yes/no]")
-        usl = input(str("Ответ: "))
+        print(Bcolors.OKCYAN + "[?]: " + "Would you like to try again? [yes/no]")
+        usl = input(str("Answer: "))
         if usl.lower() == "yes":
             continue
         else:

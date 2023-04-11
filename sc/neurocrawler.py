@@ -9,7 +9,7 @@ from colors import Bcolors
 
 
 def signal_handler(sig, frame):
-    print("\nПрограмма завершена пользователем.")
+    print("\nThe programm is terminated by the user.")
     sys.exit(0)
 
 
@@ -19,19 +19,19 @@ signal.signal(signal.SIGINT, signal_handler)
 def gpt_crawl(temp):
 
     print(
-        Bcolors.OKCYAN + '[+]: ' + "Введите свой параметр для генерации словаря api через chatgpt или напишите 'default': ")
+        Bcolors.OKCYAN + '[+]: ' + "Enter your parameter to generate the api dictionary via chatgpt or write 'default': ")
     print(
-        Bcolors.OKCYAN + '[TYPE: ]: ' + "Используйте ' - как знак ковычки. Не пишите сюда jailbreak")
+        Bcolors.OKCYAN + '[TYPE: ]: ' + "Use ' - as a quotation mark. Do not write jailbreak here")
     parametr = input(str("param: "))
     if parametr == "default":
-        paramet = f"Сгенерируй пожалуйста большой список директорий для кравлинга веб-сайта, которые ты знаешь."
+        paramet = f"Please generate a big list of directories for crawling a website that you know."
     else:
         paramet = parametr
-    desc = "Этот словарь будет использоваться для кравлинга директорий на сайте"
+    desc = "This dictionary will be used for crawling directories on the website"
     response = openai.Completion.create(
         engine="text-davinci-002",
         prompt=(
-            f"{desc}{paramet}.Просто выведи список директорий для кравлинга без своих пояснений.\n"
+            f"{desc}{paramet}.Just display the list of directories for crawling without your explanations.\n"
         ),
         temperature=temp,
         max_tokens=2048,
@@ -47,7 +47,7 @@ def gpt_crawl(temp):
     for i, item in enumerate(status):
         if item.strip():
             result_dict[i] = '/'.join([s.strip() for s in item.split('/')]).replace('//', '/')
-    print(Bcolors.OKGREEN + "[+]: " + "СЛОВАРЬ ДЛЯ КРАВЛИНГА ГОТОВ")
+    print(Bcolors.OKGREEN + "[+]: " + "THE CRAWLING DICTIONARY IS READY")
 
     return result_dict
 
