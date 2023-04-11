@@ -31,7 +31,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def print_banner():
     print()
-    cprint(figlet_format('GPTBUSTER', font='starwars', width=200),
+    cprint(figlet_format('GPTBUSTER', font='cyberlarge', width=200),
            'yellow', attrs=['bold'])
 
 
