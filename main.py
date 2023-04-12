@@ -610,23 +610,43 @@ if __name__ == '__main__':
     threads = []
 
     if args1.backup:
-        backup_thread = threading.Thread(target=backups, args=(detected_cms,))
-        threads.append(backup_thread)
+        if args1.subdomains or args1.insecure or args1.api_enum or args1.crawler:
+            print("--backup should be run without --subdomains, --insecure, --api_enum or --crawler.")
+            sys.exit(0)
+        else:
+            backup_thread = threading.Thread(target=backups, args=(detected_cms,))
+            threads.append(backup_thread)
     if args1.subdomains:
-        url = link
-        subdomains_thread = threading.Thread(target=subdomain, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies, txtman))
-        threads.append(subdomains_thread)
+        if args1.backup or args1.insecure or args1.api_enum or args1.crawler:
+            print("--subdomains should be run without --backup, --insecure, --api_enum or --crawler.")
+            sys.exit(0)
+        else:
+            url = link
+            subdomains_thread = threading.Thread(target=subdomain, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies, txtman))
+            threads.append(subdomains_thread)
     if args1.insecure:
-        insecure_thread = threading.Thread(target=insecure, args=(detected_cms,))
-        threads.append(insecure_thread)
+        if args1.subdomains or args1.backup or args1.api_enum or args1.crawler:
+            print("--insecure should be run without --subdomains, --backup, --api_enum or --crawler.")
+            sys.exit(0)
+        else:
+            insecure_thread = threading.Thread(target=insecure, args=(detected_cms,))
+            threads.append(insecure_thread)
     if args1.api_enum:
-        url = link
-        api_enumeration_thread = threading.Thread(target=api_enumeration, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
-        threads.append(api_enumeration_thread)
+        if args1.subdomains or args1.insecure or args1.backup or args1.crawler:
+            print("--api_enum should be run without --subdomains, --insecure, --backup or --crawler.")
+            sys.exit(0)
+        else:
+            url = link
+            api_enumeration_thread = threading.Thread(target=api_enumeration, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+            threads.append(api_enumeration_thread)
     if args1.crawler:
-        url = link
-        web_crawler_thread = threading.Thread(target=web_crawler, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
-        threads.append(web_crawler_thread)
+        if args1.subdomains or args1.insecure or args1.api_enum or args1.backup:
+            print("--crawler should be run without --subdomains, --insecure, --api_enum or --backup.")
+            sys.exit(0)
+        else:
+            url = link
+            web_crawler_thread = threading.Thread(target=web_crawler, args=(url, api_key, temp, headers, cookies, args1.response, args1.headers, method, proxies))
+            threads.append(web_crawler_thread)
 
     for thread in threads:
         thread.start()
