@@ -21,6 +21,7 @@ from sc.api_enum import api_enumeration
 from sc.version import ver_ger
 from sc.subdomains import subdomain
 
+
 def signal_handler(sig, frame):
     print("\nThe programm is terminated by the user.")
     sys.exit(0)
@@ -173,7 +174,7 @@ if head:
             headers = {}
 
     
-def check_files(dictionary_dir, link, headers, cookies):
+def check_files(dictionary_dir, link, headers, cookies, proxies):
     directories = []
     print(Bcolors.OKCYAN + "[+]: " + "TESTING IS GOING ON")
     with alive_bar(len(dictionary_dir)) as bar:
@@ -229,7 +230,7 @@ def gpt(cms):
     return result_dict
 
 
-results = check_files(directories_dict, link, headers, cookies)
+results = check_files(directories_dict, link, headers, cookies, proxies)
 for result in results:
     print(result)
 
@@ -382,8 +383,8 @@ def check_1c_bitrix(linked):
     return False
 
 
-def detect_cms(link, headers, cookies):
-    response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5)
+def detect_cms(link, headers, cookies, proxies):
+    response = requests.request(method, link, headers=headers, cookies=cookies, timeout=5, proxies=proxies)
     soup = BeautifulSoup(response.text, "html.parser")
 
     if soup.find("meta", {"name": "generator", "content": "WordPress"}) or \
@@ -417,7 +418,7 @@ def detect_cms(link, headers, cookies):
         return Bcolors.FAIL + "Not defined"
 
 
-detected_cms = detect_cms(link, headers, cookies)
+detected_cms = detect_cms(link, headers, cookies, proxies)
 print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
 
@@ -470,7 +471,7 @@ def insecure(detected_cms):
     last_paramet = None
 
     while reg:
-        detected_cms = "CMS: " + detect_cms(link, headers, cookies)
+        detected_cms = "CMS: " + detect_cms(link, headers, cookies, proxies)
         print(Bcolors.OKGREEN + f"Detected CMS: {detected_cms}")
 
         if last_insecure_files is None:
@@ -492,11 +493,11 @@ def insecure(detected_cms):
         last_insecure_files = insecure_files
         last_paramet = paramet
 
-        results = check_files(directories_dict, link, headers, cookies)
+        results = check_files(directories_dict, link, headers, cookies, proxies)
         for result in results:
             print(result)
 
-        results_insecure = check_files(insecure_files, link, headers, cookies)
+        results_insecure = check_files(insecure_files, link, headers, cookies, proxies)
         if txtman:
             name = input(str("Enter a name for the file:"))
             with open(f"{name}.txt", "w") as f:
@@ -581,7 +582,7 @@ def backups(detected_cms):
         last_backups = backups_files
         last_paramet = paramet
 
-        results_backups = check_files(backups_files, link, headers, cookies)
+        results_backups = check_files(backups_files, link, headers, cookies, proxies)
 
         if txtman:
             name = input(str("Enter a name for the file: "))
